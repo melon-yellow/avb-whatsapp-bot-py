@@ -14,7 +14,7 @@ class Bot:
         self.misc = miscellaneous.Miscellaneous()
 
         # Bot Phone Number
-        self.id = '@559981672091'
+        self.id = ''
 
         # Allow Info
         bot = self.bot
@@ -147,27 +147,26 @@ class Bot:
                 return bot
 
             # Interface
-            def Interface(self, req, check=False):
+            def req(self, req, ignore=False):
                 # Check Parameters
-                if not (self.__conn__ or check) or not isinstance(req, dict):
-                    return False
-                # Try Request
-                try:
-                    r = self.bot.misc.requests.get(
+                if not (self.__conn__ or ignore): return False
+                try: # Try Request
+                    r = self.bot.misc.requests.post(
                         'http://127.0.0.1:1615/interface',
-                        auth=('bot', 'ert2tyt3tQ3423rubu99ibasid8hya8da76sd'),
+                        auth=('bot', self.actions.__route__.__password__),
                         json=req,
                     )
                 # Handle Error
-                except:
+                except Exception as error:
+                    print(error)
                     return False
                 # Return Response
                 return r
 
             @property
             def conn(self):
-                try:  # Try Block
-                    r = self.Interface(dict(), True)
+                try: # Try Block
+                    r = self.req(None, True)
                     if r == False: raise Exception('Request Failed')
                     else: r.raise_for_status()
                 except self.bot.misc.requests.exceptions.ConnectionError: return False
@@ -197,7 +196,13 @@ class Bot:
             def start(self):
                 # Check Link Cyclically
                 self.bot.misc.schedule.each.one.second.do(self.__link__)
-
+                try: # Get Bot Phone Number
+                    req = self.req(dict(action='host_device'), True)
+                    data = req.json()['data']
+                    self.bot.id = data['wid']['user']
+                except: return False
+                return True
+        
         ##########################################################################################################################
         #                                                           SQL                                                          #
         ##########################################################################################################################
@@ -361,7 +366,7 @@ class Bot:
                     or not (isinstance(reply_id, str) or reply_id == None)):
                     return False
                 # Interface Send Message
-                sent = self.bot.interf.Interface(
+                sent = self.bot.interf.req(
                     dict(action='send_msg', to=to, msg=msg, log=log, reply_id=reply_id)
                 )
                 # On Interface Error
@@ -510,10 +515,12 @@ class Bot:
         self.bot.sql.start()
         self.bot.misc.time.sleep(0.1)
         # Start Bot Server
-        self.bot.api.start()
+        s = self.bot.api.start()
+        if not s: raise Exception('Server Not Started')
         self.bot.misc.time.sleep(0.1)
         # Start Interface Service
-        self.bot.interf.start()
+        i = self.bot.interf.start()
+        if not i: raise Exception('Interface Not Started')
         self.bot.misc.time.sleep(0.1)
         # Log Finished
         self.bot.log('Avbot::Started')

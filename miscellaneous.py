@@ -1169,11 +1169,13 @@ class Miscellaneous:
                 # Check for Host and Port
                 if (self.__host__ == None or
                     self.__port__ == None): return False
-                # Start Server on Daemon Thread
-                self.__thread__ = self.misc.threading.daemon(
-                    lambda: self.__app__.run(host=self.__host__, port=self.__port__))
-                # Return Thread
-                return self.__thread__
+                try: # Start Server on Daemon Thread
+                    self.__thread__ = self.misc.threading.daemon(
+                        lambda: self.__app__.run(host=self.__host__, port=self.__port__)
+                    )
+                except: return False
+                # Return True
+                return True
 
 ##########################################################################################################################
 #                                                       NEST OBJECTS                                                     #
