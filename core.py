@@ -28,13 +28,12 @@ class Bot:
 
             # Init Actions
             def __init__(self, route, api):
-
                 # Add API Execute Actions
                 self.__api__ = api
                 self.__route__ = self.__api__.add(route, methods=['GET', 'POST'])(self.__execute__)
 
-            # Actions Dictionary
-            __actions__ = dict()
+                # Actions Dictionary
+                self.__actions__ = dict()
 
             # Properties
             @property
@@ -136,7 +135,6 @@ class Bot:
         # Interface Class
         class Interface:
             def __init__(self, actions):
-
                 # Interface Actions Object
                 self.actions = actions
                 # Set Connection Status Object
@@ -210,14 +208,12 @@ class Bot:
 
             # Init SQL
             def __init__(self):
-
                 # Set MySQL Objects
                 self.mysql = self.bot.misc.log.mysql
                 self.user = self.mysql.kwargs['user']
                 self.password = self.mysql.kwargs['password']
-
-            # Set Connection Status Object
-            __conn__ = None
+                # Set Connection Status Object
+                self.__conn__ = None
 
             @property
             def bot(self):
