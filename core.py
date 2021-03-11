@@ -157,9 +157,7 @@ class Bot:
                         json=req,
                     )
                 # Handle Error
-                except Exception as error:
-                    print(error)
-                    return False
+                except: return False
                 # Return Response
                 return r
 
