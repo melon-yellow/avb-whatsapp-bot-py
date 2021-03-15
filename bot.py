@@ -34,14 +34,6 @@ lam_db = MySQL('lam')
 iba_db = MySQL('pda')
 
 ##########################################################################################################################
-#                                                    ONE HOUR SCHEDULE                                                   #
-##########################################################################################################################
-
-@Avbot.bot.misc.schedule.each.one.hour.do.at('00:00')
-def one_hour_scheudule():
-    Avbot.bot.misc.requests.get('http://192.168.17.61:8085/misc/one_hour_schedule.php')
-
-##########################################################################################################################
 #                                                    CLASSE LAMINADOR                                                    #
 ##########################################################################################################################
 
@@ -367,10 +359,10 @@ def pda_mill_status(req):
     # Options Dictionary
     switcher = dict(
         gap = 'Laminador no GAP‍! 🙏💰',
-        stop = 'Laminador parado! 🤦🏿‍♂💸💸‍',
+        stop = 'Laminador parado! 🤷♂💸💸‍',
         start = 'Laminador Produzindo! 🙏',
-        cobble = 'Sucata no Laminador 🤦🏿‍♂💸💸‍',
-        gap_off = 'O GAP foi desligado! 🤷🏾‍♂‍🐢'
+        cobble = 'Sucata no Laminador 🤦♂💸💸‍',
+        gap_off = 'O GAP foi desligado! 🤷♂‍🐢'
     )
     if status not in switcher: return False
     log = 'api::pda_mill_status({})'.format(status)
@@ -746,8 +738,8 @@ def pda_rhf_temp_alarm(req):
     elif req['GA'] == 'A': g = 'Ar'
     else: return False
     # Message
-    msg = ('*Atenção!* ⚠️ A temperatura está alta em uma Válvula ' +
-        'de Regeneração da Linha de {} na Zona de {} do forno!').format(g, z)
+    msg = ' '.join(('*Atenção!* ⚠️ A temperatura está alta em uma Válvula',
+        'de Regeneração da Linha de {} na Zona de {} do forno!')).format(g, z)
     # Admin
     Avbot.bot.send('anthony', msg, 'api::pda_rhf_high_temp_alarm(admin)')
     # Grupo Manutencao
@@ -765,7 +757,7 @@ def pda_rhf_temp_alarm(req):
 @Avbot.add('pda_mill_air_press_low')
 def pda_mill_air_press_low(req):
     # Message
-    msg = ('*Atenção!* ⚠️ A pressão de Ar Comprimido do Laminador chegou abaixo de 4.5 Bar!')
+    msg = '*Atenção!* ⚠️ A pressão de Ar Comprimido do Laminador chegou abaixo de 4.5 Bar!'
     # Admin
     Avbot.bot.send('anthony', msg, 'api::pda_mill_air_press_low(admin)')
     # Grupo Manutencao
@@ -783,7 +775,7 @@ def pda_mill_air_press_low(req):
 @Avbot.add('pda_rod_low_temp_alarm')
 def pda_rod_low_temp_alarm(req):
     # Message
-    msg = ('*Atenção!* ⚠️ A temperatura chegou abaixo de 840 graus na entrada do bloco!')
+    msg = '*Atenção!* ⚠️ A temperatura chegou abaixo de 840 graus na entrada do bloco!'
     # Admin
     Avbot.bot.send('anthony', msg, 'api::pda_rod_low_temp_alarm(admin)')
     # Grupo Automacao
@@ -800,7 +792,7 @@ def pda_rod_low_temp_alarm(req):
 def pda_rod_ipr_slip_alarm(req):
     if not Avbot.check(req, 'ipr', int): return False
     # Message
-    msg = ('*Atenção!* ⚠️ O pinch roll 0{} está patinando!'.format(req['ipr']))
+    msg = '*Atenção!* ⚠️ O pinch roll 0{} está patinando!'.format(req['ipr'])
     # Admin
     Avbot.bot.send('anthony', msg, 'api::pda_rod_ipr_slip_alarm(admin)')
     # Grupo Automacao
@@ -818,7 +810,7 @@ def pda_rod_fishline_flick_alarm(req):
     if not Avbot.check(req, 'fl', int): return False
     fl = ('do Bloco' if req['fl'] == 1 else 'da Breakout Box')
     # Message
-    msg = ('*Atenção!* ⚠️ O Fishline {} piscou!'.format(fl))
+    msg = '*Atenção!* ⚠️ O Fishline {} piscou!'.format(fl)
     # Admin
     Avbot.bot.send('anthony', msg, 'api::pda_rod_fishline_flick_alarm(admin)')
     # Grupo Automacao
@@ -829,22 +821,36 @@ def pda_rod_fishline_flick_alarm(req):
     Avbot.bot.send('marcelo', msg, 'api::pda_rod_fishline_flick_alarm(ms)')
 
 ##########################################################################################################################
-#                                                   CLASSE COUNT TORQUE OFF                                              #
+#                                                   LUB-C HIGH TEMP ALARME                                               #
 ##########################################################################################################################
 
-# Count Offs
-class OffCount:
+# On Alarm
+@Avbot.add('pda_rod_lubc_high_temp_alarm')
+def pda_rod_lubc_high_temp_alarm(req):
+    if not Avbot.check(req, 'temp', int): return False
+    # Message
+    msg = '*Atenção!* ⚠️ A temperatura do óleo da lub-C chegou acima de {} graus!'.format(req['temp'])
+    # Admin
+    Avbot.bot.send('anthony', msg, 'api::pda_rod_lubc_high_temp_alarm(admin)')
+    # Grupo Automacao
+    Avbot.bot.send('grupo_automation', msg, 'api::pda_rod_lubc_high_temp_alarm(gp)')
+    # Joao Paulo
+    Avbot.bot.send('joao_paulo', msg, 'api::pda_rod_lubc_high_temp_alarm(jp)')
+
+##########################################################################################################################
+#                                                      CLASSE TORQUE OFF                                                 #
+##########################################################################################################################
+
+# Class Torque Off
+class TorqueOff:
 
     def __init__(self):
-        # Send Message if Torque Off
-        self.__schedule__ = self.bot.misc.schedule.each.one.hour.do(self.send_off)
-
-    # Data Variables
-    s = [
-        [],[],[],[],[],[],
-        [],[],[],[],[],[],
-        [],[],[],[],[],[]
-    ]
+        # Data Variables
+        self.s = [
+            [],[],[],[],[],[],
+            [],[],[],[],[],[],
+            [],[],[],[],[],[]
+        ]
 
     @property
     def bot(self): return Avbot.bot
@@ -887,161 +893,41 @@ class OffCount:
         if type(m) != dict: return False
         if not m['cond']: return False
         m = m['off']
-        msg = ('Na ultima hora os torques das ' +
-            'seguintes gaiolas ficaram fora do normal:')
+        msg = ' '.join(('Na ultima hora os torques das',
+            'seguintes gaiolas ficaram fora do normal:'))
         for i in m:
-            msg += ('\nGaiola ' + str(i['std']) +
-                ': ' + str(i['times']) + ' vezes')
-        log = 'api::pda_mill_m_off(scheduled)'
-        self.bot.send('anthony', msg, log)
+            msg += '\nGaiola {}: {} vezes'.format(i['std'], i['times'])
+        self.bot.send('anthony', msg, 'api::pda_mill_m_off(scheduled)')
 
-##########################################################################################################################
-#                                                      CLASSE TORQUE OFF                                                 #
-##########################################################################################################################
-
-# Torque off Calc
-class TorqueOff:
-
-    def __init__(self, integral, upper, lower, limit):
-
-        # Define Parameters
-        self.integral = integral
-        self.upper = upper
-        self.lower = lower
-        self.range = limit
-
-        # Get Iba DB
-        self.iba_db = iba_db
-
-        # Nest Objects
-        self.count = OffCount()
-
-        # Update Avgs
-        safe_update = Avbot.bot.misc.call.safe(self.update)
-        @Avbot.bot.misc.threading.daemon
-        def init_update():
-            for i in range(18): safe_update(i+1)
-
-        # Start Verify
-        self.__schedule__ = self.bot.misc.schedule.each.one.second.do(self.check)
-
-    # Data Variables
-    time = [
-        0,0,0,0,0,0,
-        0,0,0,0,0,0,
-        0,0,0,0,0,0
-    ]
-    avg = [
-        None,None,None,None,None,None,
-        None,None,None,None,None,None,
-        None,None,None,None,None,None
-    ]
-    off = [
-        False,False,False,False,False,False,
-        False,False,False,False,False,False,
-        False,False,False,False,False,False
-    ]
-
-    @property
-    def bot(self): return Avbot.bot
-
-    # Update Average
-    def update(self, std):
-        query = ' '.join(('SELECT * FROM `pda_mill_m_avg`',
-            'WHERE `stand` = {} ORDER BY -1*`timestamp`',
-            'LIMIT {}')).format(std, self.range)
-        avgs = self.iba_db.get(query)
-        if avgs == None: return None
-        avgs = list(map(lambda avg: avg[2], avgs))
-        avgs = sum(avgs) / len(avgs)
-        self.avg[std-1] = avgs
-        return avgs
-
-    # Add to Integral
-    def add(self, std, delta):
-        self.time[std-1] += delta
-        return True
-
-    # Reset Integral Off
-    def reset(self, std):
-        self.time[std-1] = 0
-        return True
-
-    # Verify Integrals
-    def check(self):
-        for item in self.time:
-            std = (self.time.index(item)+1)
-            off = (item >= self.integral)
-            if off and not self.off[std-1]: self.send_off(std)
-            self.off[std-1] = off
-        return True
-
-    # Send Message Torque Off
-    def send_off(self, std):
-        cond = self.count.add(int(std))
-        msg = 'O Torque da Gaiola {} está anormal!'.format(std)
-        log = 'api::pda_mill_m_off({})'.format(std)
-        # if cond: self.bot.send('grupo_automation', msg, log)
-        return cond
-
-    # Evaluate Torque
-    def compare(self, std, m_act):
-        avg = self.avg[std-1]
-        if avg == None: return False
-        upper = m_act > (avg * (1 + (self.upper/100)))
-        lower = m_act < (avg * (1 - (self.lower/100)))
-        if upper or lower: self.add(std, 1)
-        return (upper or lower)
-
-# Instance Class
-toff = TorqueOff(integral=7, upper=15, lower=25, limit=8)
+# Instance Object
+torqueOff = TorqueOff()
 
 ##########################################################################################################################
 #                                                      TORQUE ALARME                                                     #
 ##########################################################################################################################
 
-# Add API Get Avg Torque
-@Avbot.add('pda_mill_m_avg', False)
-def pda_mill_m_avg(req):
+# Add API Get Torque Off
+@Avbot.add('pda_mill_m_off', False)
+def pda_mill_m_off(req):
     if not Avbot.check(req, 't', list): return False
     if not Avbot.check(req, 'std', (int, str)): return False
-    if not Avbot.check(req, 'm_avg', (int, float)): return False
-    t = pda.timestamp(req['t'])
-    std = int(req['std'])
-    m_avg = float(req['m_avg'])
-    # Reset Integral Off
-    toff.reset(std)
     # Insert data into MySQL
-    query = ' '.join(('INSERT INTO `pda_mill_m_avg`',
-        '(`timestamp`, `stand`, `m_avg`) VALUES (%s, %s, %s)'))
-    val = (t, std, m_avg)
-    e = iba_db.execute(query, val)
-    # Update Average Torque
-    e = toff.update(std)
-    return True
-
-# Add API Get Act Torque
-@Avbot.add('pda_mill_m_act', False)
-def pda_mill_m_act(req):
-    if not Avbot.check(req, 't', list): return False
-    if not Avbot.check(req, 'std', (int, str)): return False
-    if not Avbot.check(req, 'm_act', (int, float)): return False
-    t = pda.timestamp(req['t'])
-    std = int(req['std'])
-    m_act = float(req['m_act'])
-    # Add time off
-    toff.compare(std, m_act)
+    cond = torqueOff.add(req['std'])
+    if not cond: return True
+    msg = '*Atenção!* ⚠️ O Torque da gaiola {} está anormal!'.format(req['std'])
+    Avbot.bot.send('anthony', msg, 'api::pda_mill_m_off({})'.format(req['std']))
     return True
 
 ##########################################################################################################################
-#                                                   SCHEDULED REPORTS                                                    #
+#                                                    ONE HOUR SCHEDULE                                                   #
 ##########################################################################################################################
 
-# Relatorios de Producao
-#@Avbot.bot.misc.schedule.each.one.hour.do.at('00:00')
-#def send_reports():
-#    Avbot.bot.send('grupo_trefila', Lam.frio.prod(), 'schedule::lam.frio.prod(grupo)')
-#    Avbot.bot.send('calegari', Lam.quente.prod(), 'schedule::lam.quente.prod(calegari)')
+@Avbot.bot.misc.schedule.each.one.hour.do.at('00:00')
+def one_hour_scheudule():
+    Avbot.bot.misc.requests.get('http://192.168.17.61:8085/misc/one_hour_schedule.php')
+    # Avbot.bot.send('grupo_trefila', Lam.frio.prod(), 'schedule::lam.frio.prod(grupo_trefila)')
+    # Avbot.bot.send('calegari', Lam.quente.prod(), 'schedule::lam.quente.prod(calegari)')
+    torqueOff.send_off()
 
 ##########################################################################################################################
 #                                                      KEEP ALIVE                                                        #
@@ -1053,7 +939,7 @@ def __test__():
     # Wait 3 seconds
     Avbot.bot.misc.time.sleep(3)
     # Send Message
-    sent = Avbot.bot.send('anthony', 'Python Avbot Started!', 'warning')
+    sent = Avbot.bot.send('anthony', 'Python Avbot Started!', 'py_warning')
     @sent.reply
     def abc123(message):
         sent2 = message.quote('Got It!', 'got_reply')
