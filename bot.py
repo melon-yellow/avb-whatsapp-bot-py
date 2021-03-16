@@ -360,8 +360,8 @@ def pda_mill_status(req):
     switcher = dict(
         gap = 'Laminador no GAP‍! 🙏💰',
         stop = 'Laminador parado! 🤷‍♂️💸‍',
-        start = 'Laminador Produzindo! 🙏',
-        cobble = 'Sucata no Laminador! 🤦💸💸‍',
+        start = 'Laminador produzindo! 🙏',
+        cobble = 'Sucata no laminador! 🤦💸💸‍',
         gap_off = 'O GAP foi desligado! 🤷‍♂️🐢'
     )
     if status not in switcher: return False
