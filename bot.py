@@ -359,10 +359,10 @@ def pda_mill_status(req):
     # Options Dictionary
     switcher = dict(
         gap = 'Laminador no GAP‍! 🙏💰',
-        stop = 'Laminador parado! 🤷♂💸💸‍',
+        stop = 'Laminador parado! 🤷‍♂️💸‍',
         start = 'Laminador Produzindo! 🙏',
-        cobble = 'Sucata no Laminador 🤦♂💸💸‍',
-        gap_off = 'O GAP foi desligado! 🤷♂‍🐢'
+        cobble = 'Sucata no Laminador! 🤦💸💸‍',
+        gap_off = 'O GAP foi desligado! 🤷‍♂️🐢'
     )
     if status not in switcher: return False
     log = 'api::pda_mill_status({})'.format(status)
