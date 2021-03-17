@@ -110,28 +110,27 @@ class Turno:
 
         @property
         def pergunta_parada(self):
-            p = ['Alguém pode me dizer o motivo da parada?',
+            p = ('Alguém pode me dizer o motivo da parada?',
                 'Qual o motivo da parada?', 'Por que a máquina parou?',
-                'Qual a justificativa da parada?']
+                'Qual a justificativa da parada?')
             return self.bot.misc.random.choice(p)
 
         @property
         def obtive_resposta(self):
-            p = ['Ok', 'Entendi', 'Certo',
-                'Entendido', 'Registrado']
+            p = ('Ok', 'Entendi', 'Certo', 'Entendido', 'Registrado')
             return self.bot.misc.random.choice(p)
 
         @property
         def obtive_nao(self):
-            p = ['Ok', 'Entendi', 'Certo']
+            p = ('Ok', 'Entendi', 'Certo')
             return self.bot.misc.random.choice(p)
 
         @property
         def causa_ja_existe(self):
-            p = ['Uma informação referente à essa parada ja foi registrada',
-                'Já encontrei registros desse horário', 'A causa dessa parada ja foi registrada']
-            c = ['deseja substituir esse registro?', 'deseja registrar novamente?',
-                'deseja refazer o registro?', 'deseja fazer um novo registro?']
+            p = ('Uma informação referente à essa parada ja foi registrada',
+                'Já encontrei registros desse horário', 'A causa dessa parada ja foi registrada')
+            c = ('deseja substituir esse registro?', 'deseja registrar novamente?',
+                'deseja refazer o registro?', 'deseja fazer um novo registro?')
             r = self.bot.misc.random.choice(p) + ', ' + self.bot.misc.random.choice(c)
             return r
 
@@ -405,16 +404,17 @@ def pda_trf_status(req):
             msg += '\n⏱️ {} de parada.'.format(parada)
         # Quest Group
         gmsg = Avbot.bot.misc.copy.deepcopy(msg)
-        gmsg += '\n🗒️ {}'.format(stopTref.turno.chat.pergunta_parada)
-        gmsg += ' Escolha entre as opções da lista.'
-        quote = stopTref.show_options('grupo_trefila')
+        msg_quest = stopTref.turno.chat.pergunta_parada
+        gmsg += '\n🗒️ {} Escolha entre as opções da lista.'.format(msg_quest)
+        quote = stopTref.show_options('anthony')
         # Send Message
-        Avbot.bot.send('anthony', msg, log)
         Avbot.bot.send('jayron', msg, log)
-        sent = Avbot.bot.send('grupo_trefila', gmsg, log, quote)
+        # Avbot.bot.send('anthony', msg, log)
+        # sent = Avbot.bot.send('grupo_trefila', gmsg, log, quote)
+        sent = Avbot.bot.send('anthony', gmsg, log, quote)
     else: # If Not Starting
-        Avbot.bot.send('anthony', msg, log)
-        sent = Avbot.bot.send('jayron', msg, log)
+        Avbot.bot.send('jayron', msg, log)
+        sent = Avbot.bot.send('anthony', msg, log)
 
     # Insert to MySQL
     e = stopTref.insert_stop(dat, sent.id)
@@ -425,14 +425,18 @@ def pda_trf_status(req):
 
         # On Ambiguous Message
         def ambiguous_msg(msg, has_float=False):
-            if has_float:
-                ambig = ('Sua mensagem não foi muito clara, ' +
-                'evite o uso de pontos ou vírgulas e não digite nenhum ' +
-                'número que não indique diretamente a causa da parada.')
-            else:
-                ambig = ('Se estiver tentando registrar a causa da ' +
-                'parada de uma máquina, digite um número que esteja na lista. ' +
-                'Se houver mais de uma causa, separe os números com Espaço.')
+            r1 = (
+                'Sua mensagem não foi muito clara, evite o uso de',
+                'pontos ou vírgulas e não digite nenhum número que',
+                'não indique diretamente a causa da parada.'
+            )
+            r2 = (
+                'Se estiver tentando registrar a causa da parada de uma',
+                'máquina, digite um número que esteja na lista. Se houver',
+                'mais de uma causa, separe os números com Espaço.'
+            )
+            # check if has float
+            ambig = ' '.join(r1 if has_float else r2)
             # Send Message
             log = 'sent_ambiguous_message'
             sent_ambig = Avbot.bot.send('anthony', ambig, log, msg.id)
@@ -577,6 +581,18 @@ def pda_trf_report(req):
         if len(cause) > 0: cause = Avbot.bot.misc.json.loads(cause[4])
         return cause
 
+    # Create Message
+    def turn(h):
+        return '{}{}:00'.format('0' if len(str(h)) < 2 else '', h)
+
+    # get stop duration
+    def format_dur(item):
+        if item[6] != None:
+            delt = Avbot.bot.misc.datetime.timedelta(seconds=item[6])
+            return Avbot.bot.chat.timedelta(delt)
+        else: return 'duração indeterminada'
+
+    # get stop cause
     def format_cause(item):
         ca = get_cause(item)
         if len(ca) == 0: return 'causa não declarada'
@@ -591,37 +607,39 @@ def pda_trf_report(req):
             cause += thisc.lower()
         return cause
 
-    # Create Message
-    def turn(h):
-        return '{}{}:00'.format('0' if len(str(h)) < 2 else '', h)
+    # conditon to send report
+    send_report = True
 
     # Title
-    msg = ('\n' +
-        '------------------------------------------------------\n' +
-        '🤖 *Relatório de Paradas Trefila* 👾\n' +
-        '------------------------------------------------------\n' +
-        '📋 *Produção dia {}*\n'.format(d.strftime('%d/%m/%Y')) +
-        '🕒 *Turno das {} às {}*\n'.format(turn(t), turn(t+8)) +
-        '------------------------------------------------------')
-        #'🔠 *Turma {}*\n'.format(turma) +
+    msg = '\n'.join(('',
+        '------------------------------------------------------',
+        '🤖 *Relatório de Paradas Trefila* 👾',
+        '------------------------------------------------------',
+        '📋 *Produção dia {}*'.format(d.strftime('%d/%m/%Y')),
+        '🕒 *Turno das {} às {}*'.format(turn(t), turn(t+8)),
+        # '🔠 *Turma {}*'.format(turma),
+        '------------------------------------------------------'
+    ))
 
-    # Machine Stops
+    # Iterate Over Machines
     for maquina in paradas:
-        mq = 1 + paradas.index(maquina)
-        mq = '\n*Máquina {}:*'.format(mq)
-        mq += '\n------------------------------------------------------'
-        msg += mq if len(maquina) > 0 else ''
-        Avbot.bot.misc.datetime.timedelta(seconds=0)
+        # check for stops
+        if len(maquina) == 0: continue
+        # Iterate Over Stops
+        paradas = []
         for item in maquina:
-            msg += '\n⚠️ Parada de '
-            if item[6] == None: msg += 'duração indeterminada'
-            else:
-                delt = Avbot.bot.misc.datetime.timedelta(seconds=item[6])
-                msg += Avbot.bot.chat.timedelta(delt)
-            msg += ' por '
-            msg += format_cause(item)
-        sep = '\n------------------------------------------------------'
-        msg += sep if len(maquina) > 0 else ''
+            # append stop
+            paradas.append('⚠️ Parada de {} por {}'.format(
+                format_dur(item), format_cause(item)
+            ))
+        # append div to message
+        msg += '\n'.join((
+            '',
+            '*Máquina {}:*'.format(1 + paradas.index(maquina)),
+            '------------------------------------------------------',
+            '\n'.join(paradas),
+            '------------------------------------------------------'
+        ))
 
     # Insert Turno Util
     def insert_util_turno(mq):
@@ -630,32 +648,36 @@ def pda_trf_report(req):
             'VALUES (%s, %s, %s, %s, %s, %s)'))
         val = (t_pda, d, t, mq, util[0], util[mq])
         stopTref.turno.lam_db.execute(query, val)
+    
     # Iterate over Util
     for i in range(5):
         insert_util_turno(i+1)
 
-    # Set conditons to Util
-    send_util = True
-
-    # Get Turno Util
-    def get_util_turno():
+    # Get Shift Util
+    def get_util_turno(util):
+        # get data from last shift
         query_last_turno = ' '.join(('SELECT * FROM `lam_frio_util`',
             'WHERE (`turno` = {} AND `date` = \'{}\')',
             'ORDER BY `mq`')).format(t-8, d)
         last_turno = stopTref.turno.lam_db.get(query_last_turno)
         # Check for Data
-        if len(last_turno) < 1: send_util = False
-        # Iterate over Util
-        def get_mq(mq):
-            for row in last_turno:
-                if row[3] == mq:
-                    util[mq] -= row[5]
-                    return True
-        # Iterate over Data
+        if len(last_turno) == 0:
+            send_report = False
+            return
+        # Fix util ref
         util[0] = 28800
-        for i in range(5): get_mq(i+1)
-    # If Turno > 0
-    if t > 0: get_util_turno()
+        # Iterate over Data
+        for i in range(5):
+            # Iterate over Util
+            for row in last_turno:
+                if row[3] == i+1:
+                    util[i+1] -= row[5]
+                    break
+        # return util fixed
+        return util
+
+    if t > 0: # If shift > 0
+        util = get_util_turno(util)
 
     # Format Util
     ut = dict()
@@ -666,6 +688,13 @@ def pda_trf_report(req):
     ut['u4'] = ((util[4] / util[0]) * 100)
     ut['u5'] = ((util[5] / util[0]) * 100)
     ut['u'] = ((ut['u2'] + ut['u3'] + ut['u4'] + ut['u5']) / 4)
+    # Verify Util
+    if not (0 <= ut['u1'] <= 100): send_report = False
+    if not (0 <= ut['u2'] <= 100): send_report = False
+    if not (0 <= ut['u3'] <= 100): send_report = False
+    if not (0 <= ut['u4'] <= 100): send_report = False
+    if not (0 <= ut['u5'] <= 100): send_report = False
+    if not (0 <= ut['u'] <= 100): send_report = False
     # Fix Util
     ut['u1'] = str(round(ut['u1'], 2))
     ut['u2'] = str(round(ut['u2'], 2))
@@ -680,6 +709,16 @@ def pda_trf_report(req):
     ut['t4'] = Avbot.bot.misc.datetime.timedelta(seconds=(util[0] - util[4]))
     ut['t5'] = Avbot.bot.misc.datetime.timedelta(seconds=(util[0] - util[5]))
     ut['t'] = (ut['t2'] + ut['t3'] + ut['t4'] + ut['t5'])
+    # Verify Time
+    zt = Avbot.bot.misc.datetime.timedelta(seconds=0)
+    ht = Avbot.bot.misc.datetime.timedelta(seconds=28800)
+    ft = Avbot.bot.misc.datetime.timedelta(seconds=4*28800)
+    if not (zt <= ut['t1'] <= ht): send_report = False
+    if not (zt <= ut['t2'] <= ht): send_report = False
+    if not (zt <= ut['t3'] <= ht): send_report = False
+    if not (zt <= ut['t4'] <= ht): send_report = False
+    if not (zt <= ut['t5'] <= ht): send_report = False
+    if not (zt <= ut['t'] <= ft): send_report = False
     # Fix Time
     ut['t1'] = Avbot.bot.chat.timedelta(ut['t1'])
     ut['t2'] = Avbot.bot.chat.timedelta(ut['t2'])
@@ -689,31 +728,34 @@ def pda_trf_report(req):
     ut['t'] = Avbot.bot.chat.timedelta(ut['t'])
 
     # Append Util
-    ut_msg = ('\n' +
-        '*Utilização:*\n' +
-        '------------------------------------------------------\n' +
-        '📊 Utilização M2 (Turno): {}%\n'.format(ut['u2']) +
-        '📊 Utilização M3 (Turno): {}%\n'.format(ut['u3']) +
-        '📊 Utilização M4 (Turno): {}%\n'.format(ut['u4']) +
-        '📊 Utilização M5 (Turno): {}%\n'.format(ut['u5']) +
-        '📊 *Utilização Global: {}%*\n'.format(ut['u']) +
-        '------------------------------------------------------\n' +
-        '*Tempo Parado:*\n' +
-        '------------------------------------------------------\n' +
-        '⚠️ Tempo parado M2 (Turno):\n{}\n'.format(ut['t2']) +
-        '⚠️ Tempo parado M3 (Turno):\n{}\n'.format(ut['t3']) +
-        '⚠️ Tempo parado M4 (Turno):\n{}\n'.format(ut['t4']) +
-        '⚠️ Tempo parado M5 (Turno):\n{}\n'.format(ut['t5']) +
-        '⚠️ *Paradas Totais no Turno:*\n*{}*\n'.format(ut['t']) +
-        '------------------------------------------------------')
-    # Check for Conditions to Append
-    if send_util: msg += ut_msg
-    msg += '\n '
-    # Send Message
-    log = 'turno_trefila_report(admin)'
-    log1 = 'turno_trefila_report(grupo_trefila)'
-    Avbot.bot.send('anthony', msg, log)
-    Avbot.bot.send('grupo_trefila', msg, log1)
+    msg += '\n'.join((
+        '',
+        '*Utilização:*',
+        '------------------------------------------------------',
+        '📊 Utilização M2 (Turno): {}%'.format(ut['u2']),
+        '📊 Utilização M3 (Turno): {}%'.format(ut['u3']),
+        '📊 Utilização M4 (Turno): {}%'.format(ut['u4']),
+        '📊 Utilização M5 (Turno): {}%'.format(ut['u5']),
+        '📊 *Utilização Global: {}%*'.format(ut['u']),
+        '------------------------------------------------------',
+        '*Tempo Parado:*',
+        '------------------------------------------------------',
+        '⚠️ Tempo parado M2 (Turno): {}'.format(ut['t2']),
+        '⚠️ Tempo parado M3 (Turno): {}'.format(ut['t3']),
+        '⚠️ Tempo parado M4 (Turno): {}'.format(ut['t4']),
+        '⚠️ Tempo parado M5 (Turno): {}'.format(ut['t5']),
+        '⚠️ *Paradas Totais no Turno: {}*'.format(ut['t']),
+        '------------------------------------------------------',
+        ''
+    ))
+
+    # log
+    log = 'turno_trefila_report'
+    # send message
+    if send_report:
+        # Avbot.bot.send('grupo_trefila', msg, log)
+        Avbot.bot.send('anthony', msg, log)
+        Avbot.bot.send('jayron', msg, log)
     # Return True
     return True
 
@@ -740,14 +782,13 @@ def pda_rhf_temp_alarm(req):
     # Message
     msg = ' '.join(('*Atenção!* ⚠️ A temperatura está alta em uma Válvula',
         'de Regeneração da Linha de {} na Zona de {} do forno!')).format(g, z)
-    # Admin
-    Avbot.bot.send('anthony', msg, 'api::pda_rhf_high_temp_alarm(admin)')
-    # Grupo Manutencao
-    Avbot.bot.send('laminador_mantenedores', msg, 'api::pda_rhf_high_temp_alarm(gm)')
-    # Joao Paulo
-    Avbot.bot.send('joao_paulo', msg, 'api::pda_rhf_high_temp_alarm(jp)')
-    # Marcelo
-    Avbot.bot.send('marcelo', msg, 'api::pda_rhf_high_temp_alarm(ms)')
+    # log
+    log = 'api::pda_rhf_high_temp_alarm'
+    # send message
+    Avbot.bot.send('anthony', msg, log)
+    Avbot.bot.send('laminador_mantenedores', msg, log)
+    Avbot.bot.send('joao_paulo', msg, log)
+    Avbot.bot.send('marcelo', msg, log)
 
 ##########################################################################################################################
 #                                                   MILL AIR PRESS ALARM                                                 #
@@ -758,14 +799,13 @@ def pda_rhf_temp_alarm(req):
 def pda_mill_air_press_low(req):
     # Message
     msg = '*Atenção!* ⚠️ A pressão de Ar Comprimido do Laminador chegou abaixo de 4.5 Bar!'
-    # Admin
-    Avbot.bot.send('anthony', msg, 'api::pda_mill_air_press_low(admin)')
-    # Grupo Manutencao
-    Avbot.bot.send('laminador_mantenedores', msg, 'api::pda_mill_air_press_low(gm)')
-    # Joao Paulo
-    Avbot.bot.send('joao_paulo', msg, 'api::pda_mill_air_press_low(jp)')
-    # Marcelo
-    Avbot.bot.send('marcelo', msg, 'api::pda_mill_air_press_low(ms)')
+    # log
+    log = 'api::pda_mill_air_press_low'
+    # send message
+    Avbot.bot.send('anthony', msg, log)
+    Avbot.bot.send('laminador_mantenedores', msg, log)
+    Avbot.bot.send('joao_paulo', msg, log)
+    Avbot.bot.send('marcelo', msg, log)
 
 ##########################################################################################################################
 #                                                     TEMP NTM ALARME                                                    #
@@ -775,13 +815,14 @@ def pda_mill_air_press_low(req):
 @Avbot.add('pda_rod_low_temp_alarm')
 def pda_rod_low_temp_alarm(req):
     # Message
-    msg = '*Atenção!* ⚠️ A temperatura chegou abaixo de 840 graus na entrada do bloco!'
-    # Admin
-    Avbot.bot.send('anthony', msg, 'api::pda_rod_low_temp_alarm(admin)')
-    # Grupo Automacao
-    Avbot.bot.send('grupo_automation', msg, 'api::pda_rod_low_temp_alarm(gp)')
-    # Marcelo
-    Avbot.bot.send('marcelo', msg, 'api::pda_rod_low_temp_alarm(ms)')
+    msg = ' '.join(('*Atenção!* ⚠️ A temperatura na entrada',
+        'do bloco chegou abaixo de 840 graus!'))
+    # log
+    log = 'api::pda_rod_low_temp_alarm'
+    # send message
+    Avbot.bot.send('anthony', msg, log)
+    Avbot.bot.send('grupo_automation', msg, log)
+    Avbot.bot.send('marcelo', msg, log)
 
 ##########################################################################################################################
 #                                                     IPR SLIP ALARME                                                    #
@@ -793,12 +834,12 @@ def pda_rod_ipr_slip_alarm(req):
     if not Avbot.check(req, 'ipr', int): return False
     # Message
     msg = '*Atenção!* ⚠️ O pinch roll 0{} está patinando!'.format(req['ipr'])
-    # Admin
-    Avbot.bot.send('anthony', msg, 'api::pda_rod_ipr_slip_alarm(admin)')
-    # Grupo Automacao
-    Avbot.bot.send('grupo_automation', msg, 'api::pda_rod_ipr_slip_alarm(gp)')
-    # Marcelo
-    Avbot.bot.send('marcelo', msg, 'api::pda_rod_ipr_slip_alarm(ms)')
+    # log
+    log = 'api::pda_rod_ipr_slip_alarm'
+    # send message
+    Avbot.bot.send('anthony', msg, log)
+    Avbot.bot.send('grupo_automation', msg, log)
+    Avbot.bot.send('marcelo', msg, log)
 
 ##########################################################################################################################
 #                                                   FISHLINE FLICK ALARME                                                #
@@ -808,17 +849,16 @@ def pda_rod_ipr_slip_alarm(req):
 @Avbot.add('pda_rod_fishline_flick_alarm')
 def pda_rod_fishline_flick_alarm(req):
     if not Avbot.check(req, 'fl', int): return False
-    fl = ('do Bloco' if req['fl'] == 1 else 'da Breakout Box')
+    fl = ('do Bloco' if req['fl'] != 0 else 'da Breakout Box')
     # Message
     msg = '*Atenção!* ⚠️ O Fishline {} piscou!'.format(fl)
-    # Admin
-    Avbot.bot.send('anthony', msg, 'api::pda_rod_fishline_flick_alarm(admin)')
-    # Grupo Automacao
-    Avbot.bot.send('grupo_automation', msg, 'api::pda_rod_fishline_flick_alarm(gp)')
-    # Joao Paulo
-    Avbot.bot.send('joao_paulo', msg, 'api::pda_rod_fishline_flick_alarm(jp)')
-    # Marcelo
-    Avbot.bot.send('marcelo', msg, 'api::pda_rod_fishline_flick_alarm(ms)')
+    # log
+    log = 'api::pda_rod_fishline_flick_alarm'
+    # send message
+    Avbot.bot.send('anthony', msg, log)
+    Avbot.bot.send('grupo_automation', msg, log)
+    Avbot.bot.send('joao_paulo', msg, log)
+    Avbot.bot.send('marcelo', msg, log)
 
 ##########################################################################################################################
 #                                                   LUB-C HIGH TEMP ALARME                                               #
@@ -829,13 +869,14 @@ def pda_rod_fishline_flick_alarm(req):
 def pda_rod_lubc_high_temp_alarm(req):
     if not Avbot.check(req, 'temp', int): return False
     # Message
-    msg = '*Atenção!* ⚠️ A temperatura do óleo da lub-C chegou acima de {} graus!'.format(req['temp'])
-    # Admin
-    Avbot.bot.send('anthony', msg, 'api::pda_rod_lubc_high_temp_alarm(admin)')
-    # Grupo Automacao
-    Avbot.bot.send('grupo_automation', msg, 'api::pda_rod_lubc_high_temp_alarm(gp)')
-    # Joao Paulo
-    Avbot.bot.send('joao_paulo', msg, 'api::pda_rod_lubc_high_temp_alarm(jp)')
+    msg = ' '.join(('*Atenção!* ⚠️ A temperatura do óleo da',
+        'lub-C chegou acima de {} graus!')).format(req['temp'])
+    # log
+    log = 'api::pda_rod_lubc_high_temp_alarm'
+    # send message
+    Avbot.bot.send('anthony', msg, log)
+    Avbot.bot.send('grupo_automation', msg, log)
+    Avbot.bot.send('joao_paulo', msg, log)
 
 ##########################################################################################################################
 #                                                      CLASSE TORQUE OFF                                                 #
