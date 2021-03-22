@@ -478,7 +478,10 @@ def pda_trf_status(req):
             def new_cause(confirm):
                 # On Affirmative
                 if Avbot.bot.chat.yes(confirm):
-                    stopTref.insert_cause(sent.id, message.body)
+                    causas = verify_causas(confirm)
+                    if causas == False: return False
+                    causas_json = Avbot.bot.misc.json.dumps(causas)
+                    stopTref.insert_cause(sent.id, causas_json)
                     sent2.reply(lambda: None)
                 # On Negative
                 elif Avbot.bot.chat.no(confirm):
@@ -760,7 +763,7 @@ def pda_trf_report(req):
     return True
 
 ##########################################################################################################################
-#                                                       RHF ALARME                                                       #
+#                                                      RHF HIGH TEMP ALARM                                               #
 ##########################################################################################################################
 
 # On Alarm
@@ -779,7 +782,7 @@ def pda_rhf_temp_alarm(req):
     if req['GA'] == 'G': g = 'Gás'
     elif req['GA'] == 'A': g = 'Ar'
     else: return False
-    # Message
+    # message
     msg = ' '.join(('*Atenção!* ⚠️ A temperatura está alta em uma Válvula',
         'de Regeneração da Linha de {} na Zona de {} do forno!')).format(g, z)
     # log
@@ -788,16 +791,15 @@ def pda_rhf_temp_alarm(req):
     Avbot.bot.send('anthony', msg, log)
     Avbot.bot.send('laminador_mantenedores', msg, log)
     Avbot.bot.send('joao_paulo', msg, log)
-    Avbot.bot.send('marcelo', msg, log)
 
 ##########################################################################################################################
-#                                                   MILL AIR PRESS ALARM                                                 #
+#                                                  MILL AIR PRESS LOW ALARM                                              #
 ##########################################################################################################################
 
 # On Alarm
 @Avbot.add('pda_mill_air_press_low')
 def pda_mill_air_press_low(req):
-    # Message
+    # message
     msg = '*Atenção!* ⚠️ A pressão de Ar Comprimido do Laminador chegou abaixo de 4.5 Bar!'
     # log
     log = 'api::pda_mill_air_press_low'
@@ -805,52 +807,52 @@ def pda_mill_air_press_low(req):
     Avbot.bot.send('anthony', msg, log)
     Avbot.bot.send('laminador_mantenedores', msg, log)
     Avbot.bot.send('joao_paulo', msg, log)
-    Avbot.bot.send('marcelo', msg, log)
 
 ##########################################################################################################################
-#                                                     TEMP NTM ALARME                                                    #
+#                                                     ROD LOW TEMP ALARM                                                 #
 ##########################################################################################################################
 
 # On Alarm
 @Avbot.add('pda_rod_low_temp_alarm')
 def pda_rod_low_temp_alarm(req):
-    # Message
+    if not Avbot.check(req, 'temp', (int, float)): return False
+    # message
     msg = ' '.join(('*Atenção!* ⚠️ A temperatura na entrada',
-        'do bloco chegou abaixo de 840 graus!'))
+        'do bloco chegou abaixo de {} graus!')).format(req['temp'])
     # log
     log = 'api::pda_rod_low_temp_alarm'
     # send message
     Avbot.bot.send('anthony', msg, log)
     Avbot.bot.send('grupo_automation', msg, log)
-    Avbot.bot.send('marcelo', msg, log)
+    Avbot.bot.send('joao_paulo', msg, log)
 
 ##########################################################################################################################
-#                                                     IPR SLIP ALARME                                                    #
+#                                                       IPR SLIP ALARM                                                   #
 ##########################################################################################################################
 
 # On Alarm
 @Avbot.add('pda_rod_ipr_slip_alarm')
 def pda_rod_ipr_slip_alarm(req):
     if not Avbot.check(req, 'ipr', int): return False
-    # Message
+    # message
     msg = '*Atenção!* ⚠️ O pinch roll 0{} está patinando!'.format(req['ipr'])
     # log
     log = 'api::pda_rod_ipr_slip_alarm'
     # send message
     Avbot.bot.send('anthony', msg, log)
     Avbot.bot.send('grupo_automation', msg, log)
-    Avbot.bot.send('marcelo', msg, log)
+    Avbot.bot.send('joao_paulo', msg, log)
 
 ##########################################################################################################################
-#                                                   FISHLINE FLICK ALARME                                                #
+#                                                    FISHLINE FLICK ALARM                                                #
 ##########################################################################################################################
 
 # On Alarm
 @Avbot.add('pda_rod_fishline_flick_alarm')
 def pda_rod_fishline_flick_alarm(req):
     if not Avbot.check(req, 'fl', int): return False
-    fl = ('do Bloco' if req['fl'] != 0 else 'da Breakout Box')
-    # Message
+    fl = ('principal' if req['fl'] != 0 else 'da Breakout Box')
+    # message
     msg = '*Atenção!* ⚠️ O Fishline {} piscou!'.format(fl)
     # log
     log = 'api::pda_rod_fishline_flick_alarm'
@@ -858,17 +860,16 @@ def pda_rod_fishline_flick_alarm(req):
     Avbot.bot.send('anthony', msg, log)
     Avbot.bot.send('grupo_automation', msg, log)
     Avbot.bot.send('joao_paulo', msg, log)
-    Avbot.bot.send('marcelo', msg, log)
 
 ##########################################################################################################################
-#                                                   LUB-C HIGH TEMP ALARME                                               #
+#                                                   LUB-C HIGH TEMP ALARM                                                #
 ##########################################################################################################################
 
 # On Alarm
 @Avbot.add('pda_rod_lubc_high_temp_alarm')
 def pda_rod_lubc_high_temp_alarm(req):
-    if not Avbot.check(req, 'temp', int): return False
-    # Message
+    if not Avbot.check(req, 'temp', (int, float)): return False
+    # message
     msg = ' '.join(('*Atenção!* ⚠️ A temperatura do óleo da',
         'lub-C chegou acima de {} graus!')).format(req['temp'])
     # log
@@ -938,6 +939,7 @@ class TorqueOff:
             'seguintes gaiolas ficaram fora do normal:'))
         for i in m:
             msg += '\nGaiola {}: {} vezes'.format(i['std'], i['times'])
+        # send message
         self.bot.send('anthony', msg, 'api::pda_mill_m_off(scheduled)')
 
 # Instance Object
@@ -955,8 +957,13 @@ def pda_mill_m_off(req):
     # Insert data into MySQL
     cond = torqueOff.add(req['std'])
     if not cond: return True
+    # message
     msg = '*Atenção!* ⚠️ O Torque da gaiola {} está anormal!'.format(req['std'])
-    Avbot.bot.send('anthony', msg, 'api::pda_mill_m_off({})'.format(req['std']))
+    # log
+    log = 'api::pda_mill_m_off({})'.format(req['std'])
+    # send message
+    Avbot.bot.send('anthony', msg, log)
+    # return true
     return True
 
 ##########################################################################################################################

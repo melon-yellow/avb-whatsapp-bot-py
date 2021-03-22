@@ -150,7 +150,7 @@ class Bot:
                 if not (self.__conn__ or ignore): return False
                 try: # Try Request
                     r = self.bot.misc.requests.post(
-                        'http://127.0.0.1:1615/interface',
+                        'http://127.0.0.1:1615/bot',
                         auth=('bot', self.actions.__route__.__password__),
                         json=req,
                     )
@@ -361,7 +361,14 @@ class Bot:
                     return False
                 # Interface Send Message
                 sent = self.bot.interf.req(
-                    dict(action='send_msg', to=to, msg=msg, log=log, reply_id=reply_id)
+                    dict(
+                        action='send_msg',
+                        to = to,
+                        msg = msg,
+                        log = log,
+                        reply_id = reply_id,
+                        reply_url = 'http://127.0.0.1:1516/ibot'
+                    )
                 )
                 # On Interface Error
                 if sent == False: return False
@@ -463,7 +470,7 @@ class Bot:
         self.actions.user('bot').password('vet89u43t0jw234erwedf21sd9R78fe2n2084u')
 
         # Set Bot Interface Actions
-        iactions = Actions('/interface', self.api)
+        iactions = Actions('/ibot', self.api)
         iactions.user('bot').password('ert2tyt3tQ3423rubu99ibasid8hya8da76sd')
         self.interf = Interface(iactions)
 
