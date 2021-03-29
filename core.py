@@ -39,6 +39,9 @@ class Bot:
             @property
             def bot(self): return bot
 
+            @property
+            def actions(self): return self
+
             # Set User
             def user(self, user):
                 return self.__route__.user(user)
@@ -68,14 +71,11 @@ class Bot:
                         or len(name) == 0):
                         return False
                     # Set Caller
-                    function = self.bot.misc.call.safe(function=function)
+                    function = self.bot.misc.call.safe(function)
                     function.__name__ = name
-                    # Create Async Caller
-                    fasync = self.bot.misc.threading.Async(function)
-                    fasync.__name__ = name
-                    fasync.__logging__ = log
+                    function.__logging__ = log
                     # Nest Objects
-                    self.__actions__[name] = fasync
+                    self.__actions__[name] = function
                     # Return Function
                     return function
                 # Return Decorator
@@ -105,28 +105,36 @@ class Bot:
 
             # Execute Action
             def __execute__(self, req):
-                # Set Error Response
-                error = dict(done=False, status='action not found')
-                # Check Parameters
-                if (not isinstance(req, dict)
-                    or ('action' not in req)
-                    or not isinstance(req['action'], str)
-                    or len(req['action']) == 0
-                    or req['action'] not in self.__actions__):
-                    return error
-                # Get Action Name
-                action = req['action']
-                # Define Log
-                locale = self.__actions__[action].__locale__
-                ip = self.__api__.flask.request.remote_addr
-                log = 'Exec({}) From({})'.format(locale, ip)
-                # Log Action
-                if self.__actions__[action].__logging__:
-                    self.bot.log(log)
-                # Execute Action
-                self.__actions__[action](req)
-                # Return Status
-                return dict(status='executed')
+                data = None
+                try: # Try Block
+                    # Check Parameters
+                    if not isinstance(req, dict): raise Exception('bad request')
+                    if 'action' not in req: raise Exception('action missing in request')
+                    if not isinstance(req['action'], str): raise Exception('action must be a string')
+                    if len(req['action']) == 0: raise Exception('action not valid')
+                    if req['action'] not in self.actions.__actions__: raise Exception('action not found')
+                    # Get Action Name
+                    action = req['action']
+                    # Define Log
+                    locale = self.__actions__[action].__locale__
+                    ip = self.__api__.flask.request.remote_addr
+                    log = 'Exec({}) From({})'.format(locale, ip)
+                    # Log Action
+                    if self.__actions__[action].__logging__:
+                        self.bot.log(log)
+                    # Execute Action
+                    data = self.__actions__[action](req)
+                # If Error Occurred
+                except Exception as error:
+                    return dict(done=False, error=str(error))
+                try: # Make Serializable
+                    json = self.bot.misc.json
+                    serialize = lambda d: json.loads(json.dumps(d))
+                    try: data = serialize(data)
+                    except: data = serialize(data.__dict__)
+                except: data = None
+                # If Success
+                return dict(done=True, data=data)
 
         ##########################################################################################################################
         #                                                         INTERFACE                                                      #
@@ -352,21 +360,21 @@ class Bot:
                     return self.msg.send(self.__from__, msg, log, self.id)
 
             # Send Message
-            def send(self, to, msg, log='api::send_msg', reply_id=None):
+            def send(self, to, text, log='api::send_msg', quote_id=None):
                 # Check Parameters
                 if (not (isinstance(to, str) or to == None)
-                    or not (isinstance(msg, str) or msg == None)
+                    or not (isinstance(text, str) or text == None)
                     or not (isinstance(log, str) or log == None)
-                    or not (isinstance(reply_id, str) or reply_id == None)):
+                    or not (isinstance(quote_id, str) or quote_id == None)):
                     return False
                 # Interface Send Message
                 sent = self.bot.interf.req(
                     dict(
                         action='send_msg',
                         to = to,
-                        msg = msg,
+                        text = text,
                         log = log,
-                        reply_id = reply_id,
+                        quote_id = quote_id,
                         reply_url = 'http://127.0.0.1:1516/ibot'
                     )
                 )
@@ -482,12 +490,12 @@ class Bot:
         # Add Action Send
         @self.add('send_msg')
         def __send__(req):
-            r = dict(to=None, msg=None, log=None, id=None)
+            r = dict(to=None, text=None, log=None, id=None)
             if 'to' in req: r['to'] = req['to']
-            if 'msg' in req: r['msg'] = req['msg']
+            if 'text' in req: r['text'] = req['text']
             if 'log' in req: r['log'] = req['log']
-            if 'reply_id' in req: r['id'] = req['reply_id']
-            sent = self.bot.send(r['to'], r['msg'], r['log'], r['id'])
+            if 'quote_id' in req: r['id'] = req['quote_id']
+            sent = self.bot.send(r['to'], r['text'], r['log'], r['id'])
             return sent
 
     ##########################################################################################################################

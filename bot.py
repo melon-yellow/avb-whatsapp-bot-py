@@ -3,7 +3,7 @@
 #                                                        AVBOT                                                           #
 ##########################################################################################################################
 #                                                                                                                        #
-#                                                     Avbot v1.6.4                                                       #
+#                                                     Avbot v1.9.3                                                       #
 #                                          Multi-language API for Whatsapp Bot                                           #
 #                             ---------------- Python3 -- NodeJS -- MySQL ----------------                               #
 #                                             This is a Development Server                                               #
@@ -353,7 +353,7 @@ stopTref = ParadasTrefila()
 # Status do Laminador
 @Avbot.add('pda_mill_status')
 def pda_mill_status(req):
-    if not Avbot.check(req, 'status', str): return False
+    if not Avbot.check(req, 'status', str): raise Exception('key "status" not found')
     status = req['status']
     # Options Dictionary
     switcher = dict(
@@ -377,8 +377,8 @@ def pda_mill_status(req):
 # Status da Trefila
 @Avbot.add('pda_trf_status')
 def pda_trf_status(req):
-    if not Avbot.check(req, 'mq', str): return False
-    if not Avbot.check(req, 'status', str): return False
+    if not Avbot.check(req, 'mq', str): raise Exception('key "mq" not found')
+    if not Avbot.check(req, 'status', str): raise Exception('key "status" not found')
     mq = req['mq']
     status = req['status']
     # Options Dictionary
@@ -499,8 +499,8 @@ def pda_trf_status(req):
 # Relaatorio Turno Trefila
 @Avbot.add('pda_trf_report')
 def pda_trf_report(req):
-    if not Avbot.check(req, 't', list): return False
-    if not Avbot.check(req, 'util', list): return False
+    if not Avbot.check(req, 't', list): raise Exception('key "t" not found')
+    if not Avbot.check(req, 'util', list):  raise Exception('key "util" not found')
     t_pda = pda.timestamp(req['t'])
     util = req['util']
 
@@ -767,24 +767,25 @@ def pda_trf_report(req):
 ##########################################################################################################################
 
 # On Alarm
-@Avbot.add('pda_rhf_high_temp_alarm')
+@Avbot.add('pda_rhf_re_high_temp_alarm')
 def pda_rhf_temp_alarm(req):
-    if not Avbot.check(req, 'N', str): return False
-    if not Avbot.check(req, 'GA', str): return False
-    if not Avbot.check(req, 'valve', str): return False
-    z = ''
-    g = ''
-    if req['N'] == '101': z = 'Pré Aquecimento'
-    elif req['N'] == '102': z = 'Aquecimento'
-    elif req['N'] == '103': z = 'Enxarque Superior'
-    elif req['N'] == '104': z = 'Enxarque Inferior'
+    if not Avbot.check(req, 'N', str): raise Exception('key "N" not found')
+    if not Avbot.check(req, 'GA', str): raise Exception('key "GA" not found')
+    if not Avbot.check(req, 'valve', str): raise Exception('key "valve" not found')
+    gas = ''
+    zone = ''
+    valve = str(req['valve'])
+    if req['N'] == '101': zone = 'Pré Aquecimento'
+    elif req['N'] == '102': zone = 'Aquecimento'
+    elif req['N'] == '103': zone = 'Enxarque Superior'
+    elif req['N'] == '104': zone = 'Enxarque Inferior'
     else: return False
-    if req['GA'] == 'G': g = 'Gás'
-    elif req['GA'] == 'A': g = 'Ar'
+    if req['GA'] == 'G': gas = 'Gás'
+    elif req['GA'] == 'A': gas = 'Ar'
     else: return False
     # message
-    msg = ' '.join(('*Atenção!* ⚠️ A temperatura está alta em uma Válvula',
-        'de Regeneração da Linha de {} na Zona de {} do forno!')).format(g, z)
+    msg = ' '.join(('*Atenção!* ⚠️ A temperatura está alta na Linha de',
+        'Regeneração de {} ({}) da Zona de {} do forno!')).format(gas, valve, zone)
     # log
     log = 'api::pda_rhf_high_temp_alarm'
     # send message
@@ -799,8 +800,10 @@ def pda_rhf_temp_alarm(req):
 # On Alarm
 @Avbot.add('pda_mill_air_press_low')
 def pda_mill_air_press_low(req):
+    if not Avbot.check(req, 'pres', (int, float)): raise Exception('key "pres" not found')
     # message
-    msg = '*Atenção!* ⚠️ A pressão de Ar Comprimido do Laminador chegou abaixo de 4.5 Bar!'
+    msg = ' '.join(('*Atenção!* ⚠️ A pressão de Ar Comprimido',
+        'do Laminador chegou abaixo de {} Bar!')).format(req['pres'])
     # log
     log = 'api::pda_mill_air_press_low'
     # send message
@@ -815,7 +818,7 @@ def pda_mill_air_press_low(req):
 # On Alarm
 @Avbot.add('pda_rod_low_temp_alarm')
 def pda_rod_low_temp_alarm(req):
-    if not Avbot.check(req, 'temp', (int, float)): return False
+    if not Avbot.check(req, 'temp', (int, float)): raise Exception('key "temp" not found')
     # message
     msg = ' '.join(('*Atenção!* ⚠️ A temperatura na entrada',
         'do bloco chegou abaixo de {} graus!')).format(req['temp'])
@@ -833,7 +836,7 @@ def pda_rod_low_temp_alarm(req):
 # On Alarm
 @Avbot.add('pda_rod_ipr_slip_alarm')
 def pda_rod_ipr_slip_alarm(req):
-    if not Avbot.check(req, 'ipr', int): return False
+    if not Avbot.check(req, 'ipr', int): raise Exception('key "ipr" not found')
     # message
     msg = '*Atenção!* ⚠️ O pinch roll 0{} está patinando!'.format(req['ipr'])
     # log
@@ -850,7 +853,7 @@ def pda_rod_ipr_slip_alarm(req):
 # On Alarm
 @Avbot.add('pda_rod_fishline_flick_alarm')
 def pda_rod_fishline_flick_alarm(req):
-    if not Avbot.check(req, 'fl', int): return False
+    if not Avbot.check(req, 'fl', int): raise Exception('key "fl" not found')
     fl = ('principal' if req['fl'] != 0 else 'da Breakout Box')
     # message
     msg = '*Atenção!* ⚠️ O Fishline {} piscou!'.format(fl)
@@ -868,7 +871,7 @@ def pda_rod_fishline_flick_alarm(req):
 # On Alarm
 @Avbot.add('pda_rod_lubc_high_temp_alarm')
 def pda_rod_lubc_high_temp_alarm(req):
-    if not Avbot.check(req, 'temp', (int, float)): return False
+    if not Avbot.check(req, 'temp', (int, float)): raise Exception('key "temp" not found')
     # message
     msg = ' '.join(('*Atenção!* ⚠️ A temperatura do óleo da',
         'lub-C chegou acima de {} graus!')).format(req['temp'])
@@ -950,10 +953,10 @@ torqueOff = TorqueOff()
 ##########################################################################################################################
 
 # Add API Get Torque Off
-@Avbot.add('pda_mill_m_off', False)
+# @Avbot.add('pda_mill_m_off')
 def pda_mill_m_off(req):
-    if not Avbot.check(req, 't', list): return False
-    if not Avbot.check(req, 'std', (int, str)): return False
+    if not Avbot.check(req, 't', list): raise Exception('key "t" not found')
+    if not Avbot.check(req, 'std', (int, str)): raise Exception('key "std" not found')
     # Insert data into MySQL
     cond = torqueOff.add(req['std'])
     if not cond: return True
