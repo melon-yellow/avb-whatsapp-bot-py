@@ -11,7 +11,7 @@ class Bot:
         # Import Miscellaneous
         import sys
         sys.path.append('E:/python/misc')
-        import Miscellaneous from miscellaneous
+        from miscellaneous import Miscellaneous
 
         # Instance Misc
         self.misc = Miscellaneous()
