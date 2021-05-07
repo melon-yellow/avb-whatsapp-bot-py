@@ -11,10 +11,10 @@ class Bot:
         # Import Miscellaneous
         import sys
         sys.path.append('E:/python/misc')
-        import miscellaneous
+        import Miscellaneous from miscellaneous
 
         # Instance Misc
-        self.misc = miscellaneous.Miscellaneous()
+        self.misc = Miscellaneous()
 
         # Bot Phone Number
         self.id = ''
