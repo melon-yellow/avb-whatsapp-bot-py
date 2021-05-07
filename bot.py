@@ -366,6 +366,9 @@ def pda_mill_status(req):
     if status not in switcher: return False
     log = 'api::pda_mill_status({})'.format(status)
     msg = switcher[status]
+    if status == 'cobble': msg = '\n'.join(
+        (msg, 'Favor executar ordem de liberação de equipamento no ITSS após retirada da sucata.')
+    )
     # Send Message
     Avbot.bot.send('gerencia_laminacao', msg, log)
     Avbot.bot.send('anthony', msg, log)
@@ -500,7 +503,7 @@ def pda_trf_status(req):
 @Avbot.add('pda_trf_report')
 def pda_trf_report(req):
     if not Avbot.check(req, 't', list): raise Exception('key "t" not found')
-    if not Avbot.check(req, 'util', list):  raise Exception('key "util" not found')
+    if not Avbot.check(req, 'util', list): raise Exception('key "util" not found')
     t_pda = pda.timestamp(req['t'])
     util = req['util']
 
@@ -981,7 +984,7 @@ def one_hour_scheudule():
     torqueOff.send_off()
 
 ##########################################################################################################################
-#                                                      KEEP ALIVE                                                        #
+#                                                           TESTING                                                      #
 ##########################################################################################################################
 
 # Test Function
@@ -1009,6 +1012,10 @@ def __test__():
                 else: # Get Error Understanding
                     sentL = message.quote(':|', 'avbot_is_confused')
                     sentL.reply(yfw234)
+
+##########################################################################################################################
+#                                                        KEEP ALIVE                                                      #
+##########################################################################################################################
 
 # If Main
 if __name__ == '__main__':

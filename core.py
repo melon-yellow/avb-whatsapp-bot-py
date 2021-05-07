@@ -8,9 +8,12 @@ class Bot:
     # Init Bot
     def __init__(self):
 
-        # Imports
+        # Import Miscellaneous
+        import sys
+        sys.path.append('E:/python/misc')
         import miscellaneous
 
+        # Instance Misc
         self.misc = miscellaneous.Miscellaneous()
 
         # Bot Phone Number
@@ -471,7 +474,7 @@ class Bot:
         ##########################################################################################################################
 
         # Set Bot Api
-        self.api = self.misc.api().host('0.0.0.0').port(1516)
+        self.api = self.misc.api(log=False).host('0.0.0.0').port(1516)
 
         # Set Bot Actions
         self.actions = Actions('/bot', self.api)
