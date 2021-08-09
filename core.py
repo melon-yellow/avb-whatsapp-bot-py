@@ -378,7 +378,7 @@ class Bot:
                         text = text,
                         log = log,
                         quote_id = quote_id,
-                        reply_url = 'http://127.0.0.1:1516/ibot'
+                        reply_url = 'http://gusal2:1516/ibot'
                     )
                 )
                 # On Interface Error

@@ -775,25 +775,38 @@ def pda_rhf_temp_alarm(req):
     if not Avbot.check(req, 'N', str): raise Exception('key "N" not found')
     if not Avbot.check(req, 'GA', str): raise Exception('key "GA" not found')
     if not Avbot.check(req, 'valve', str): raise Exception('key "valve" not found')
-    gas = ''
+    # Get Furnace Zone
     zone = ''
-    valve = str(req['valve'])
     if req['N'] == '101': zone = 'Pré Aquecimento'
     elif req['N'] == '102': zone = 'Aquecimento'
     elif req['N'] == '103': zone = 'Enxarque Superior'
     elif req['N'] == '104': zone = 'Enxarque Inferior'
     else: return False
-    if req['GA'] == 'G': gas = 'Gás'
-    elif req['GA'] == 'A': gas = 'Ar'
+    # Get Gas Type
+    gas = ''
+    nv = ['', '']
+    if req['GA'] == 'G':
+        gas = 'Gás'
+        nv = ['1','3']
+    elif req['GA'] == 'A':
+        gas = 'Ar'
+        nv = ['2','4']
     else: return False
+    # Check Valve Letter
+    if not isinstance(req['valve'], str) or len(req['valve']) != 1: return False
+    valve = req['valve']
+    # Get Valve Name
+    tm = 'UV' + req['N'] + '{}' + valve
+    vnames = '({}/{})'.format(tm.format(nv[0]), tm.format(nv[1]))
     # message
     msg = ' '.join(('*Atenção!* ⚠️ A temperatura está alta na Linha de',
-        'Regeneração de {} ({}) da Zona de {} do forno!')).format(gas, valve, zone)
+        '{} ({}) da Zona de {} do forno! {}')).format(gas, valve, zone, vnames)
     # log
     log = 'api::pda_rhf_high_temp_alarm'
     # send message
     Avbot.bot.send('anthony', msg, log)
     Avbot.bot.send('laminador_mantenedores', msg, log)
+    Avbot.bot.send('grupo_supervisores', msg, log)
     Avbot.bot.send('joao_paulo', msg, log)
 
 ##########################################################################################################################
@@ -830,6 +843,7 @@ def pda_rod_low_temp_alarm(req):
     # send message
     Avbot.bot.send('anthony', msg, log)
     Avbot.bot.send('grupo_automation', msg, log)
+    Avbot.bot.send('grupo_supervisores', msg, log)
     Avbot.bot.send('joao_paulo', msg, log)
 
 ##########################################################################################################################
@@ -847,6 +861,7 @@ def pda_rod_ipr_slip_alarm(req):
     # send message
     Avbot.bot.send('anthony', msg, log)
     Avbot.bot.send('grupo_automation', msg, log)
+    Avbot.bot.send('grupo_supervisores', msg, log)
     Avbot.bot.send('joao_paulo', msg, log)
 
 ##########################################################################################################################
@@ -865,6 +880,7 @@ def pda_rod_fishline_flick_alarm(req):
     # send message
     Avbot.bot.send('anthony', msg, log)
     Avbot.bot.send('grupo_automation', msg, log)
+    Avbot.bot.send('grupo_supervisores', msg, log)
     Avbot.bot.send('joao_paulo', msg, log)
 
 ##########################################################################################################################
@@ -883,6 +899,7 @@ def pda_rod_lubc_high_temp_alarm(req):
     # send message
     Avbot.bot.send('anthony', msg, log)
     Avbot.bot.send('grupo_automation', msg, log)
+    Avbot.bot.send('grupo_supervisores', msg, log)
     Avbot.bot.send('joao_paulo', msg, log)
 
 ##########################################################################################################################
@@ -956,7 +973,7 @@ torqueOff = TorqueOff()
 ##########################################################################################################################
 
 # Add API Get Torque Off
-# @Avbot.add('pda_mill_m_off')
+@Avbot.add('pda_mill_m_off')
 def pda_mill_m_off(req):
     if not Avbot.check(req, 't', list): raise Exception('key "t" not found')
     if not Avbot.check(req, 'std', (int, str)): raise Exception('key "std" not found')
@@ -973,12 +990,183 @@ def pda_mill_m_off(req):
     return True
 
 ##########################################################################################################################
+#                                                  TORQUE SEM PECA ALARME                                                #
+##########################################################################################################################
+
+# Add API Get Torque No-Load Off
+@Avbot.add('pda_mill_m_nl_off')
+def pda_mill_m_nl_off(req):
+    if not Avbot.check(req, 't', list): raise Exception('key "t" not found')
+    if not Avbot.check(req, 'std', (int, str)): raise Exception('key "std" not found')
+    # message
+    msg = '*Atenção!* ⚠️ O Torque sem peça na gaiola {} está acima do normal!'.format(req['std'])
+    # log
+    log = 'api::pda_mill_m_nl_off({})'.format(req['std'])
+    # send message
+    Avbot.bot.send('anthony', msg, log)
+    # return true
+    return True
+
+##########################################################################################################################
+#                                                           PY-MES                                                       #
+##########################################################################################################################
+
+# PyMes Function
+def py_check(tagname):
+    try: # Request IP21 Server
+        res = Avbot.bot.misc.requests.post(
+            'http://avbsrvssta:3002/api2/ip21/',
+            json = dict(tagname = tagname),
+            auth = ('client', '#22gh3er41ty2q@ewe3e9u')
+        )
+        res = Avbot.bot.misc.json.loads(res.text)
+    except: # If Server Not Responding
+        res = dict(value=None, name=None, status='Server Down')
+    # Return data
+    return res
+
+##########################################################################################################################
+#                                                   ONE MINUTE SCHEDULE                                                  #
+##########################################################################################################################
+
+# Class Torque Off
+class PyMESCheck:
+
+    def __init__(self):
+        # Data Variables
+        self.cimios = dict(
+            AFS = None,
+            BOF = None,
+            LCFP = None
+        )
+        self.fault = dict(
+            AFS = False,
+            BOF = False,
+            LCFP = False
+        )
+
+    @property
+    def bot(self): return Avbot.bot
+
+    # Convert
+    def conv(self, ip_value):
+        if not isinstance(ip_value, str): return None
+        try:
+            return self.bot.misc.datetime.datetime.strptime(
+                ip_value, '%d/%m/%Y %H:%M:%S'
+            )
+        except Exception as e:
+            print(e)
+            return None
+
+    # Update Timestamps
+    def update(self):
+        # Get Cim-IO Timestamps
+        afs = self.conv(py_check('IP21@CIMIO_AFS_T-R').get('value'))
+        bof = self.conv(py_check('IP21@CIMIO_BOF_T-R').get('value'))
+        lcfp = self.conv(py_check('IP21@CIMIO_LCFP_T-R').get('value'))
+
+        # Assign Values
+        if afs != None: self.cimios['AFS'] = afs + Avbot.bot.misc.datetime.timedelta(minutes = 7)
+        if bof != None: self.cimios['BOF'] = bof + Avbot.bot.misc.datetime.timedelta(minutes = 1)
+        if lcfp != None: self.cimios['LCFP'] = lcfp + Avbot.bot.misc.datetime.timedelta(minutes = -3)
+
+        # Set Last Update
+        self.lastupdate = self.bot.misc.datetime.datetime.now()
+    
+    # Check Method
+    def check(self, dt):
+        if dt == None: return False
+        if self.lastupdate > dt: dif = self.lastupdate - dt
+        else: dif = dt - self.lastupdate
+        m3 = self.bot.misc.datetime.timedelta(minutes = 3)
+        if dif.seconds > m3.seconds:
+            return False
+        return True
+    
+    # Check If Cim-IO is OK
+    def nok(self, key):
+        return not self.check(self.cimios.get(key))
+
+# Instance Object
+pyMesCheck = PyMESCheck()
+
+##########################################################################################################################
+#                                                   ONE MINUTE SCHEDULE                                                  #
+##########################################################################################################################
+
+def py_mes_check_cimios():
+    # Update Timestamps
+    pyMesCheck.update()
+
+    # Check Values
+    afs = pyMesCheck.nok('AFS')
+    bof = pyMesCheck.nok('BOF')
+    lcfp = pyMesCheck.nok('LCFP')
+
+    # Check if Has Trigger
+    cafs = afs and not pyMesCheck.fault['AFS']
+    cbof = bof and not pyMesCheck.fault['BOF']
+    clcfp = lcfp and not pyMesCheck.fault['LCFP']
+
+    # Should Send Message
+    should_send = cafs or cbof or clcfp
+
+    # Assign Fault to History
+    pyMesCheck.fault['AFS'] = afs
+    pyMesCheck.fault['BOF'] = bof
+    pyMesCheck.fault['LCFP'] = lcfp
+
+    # If Should Send Message
+    if should_send:
+        # message
+        msg = '*Atenção!* ⚠️ '
+        # Check All
+        if afs and bof and lcfp:
+            msg += 'O PIMS está com problemas!'
+        else:
+            # Temp Array
+            tar = []
+            if afs: tar.append('do AF')
+            if bof: tar.append('do LD')
+            if lcfp: tar.append('do LC')
+
+            # Get Length of Temp Array
+            cnt = len(tar)
+
+            # Temp Text
+            txt = ''
+            for i in range(cnt):
+                txt += tar[i]
+                if i < (cnt - 2): txt += ','
+                if i == (cnt - 2): txt += 'e'
+            
+            # Check For More Than One Issue
+            if cnt == 1: msg += 'O Cim-IO {} está com problemas!'.format(txt)
+            else: msg += 'Os Cim-IOs {} estão com problemas!'.format(txt)
+
+        # Send Message
+        Avbot.bot.send('anthony', msg, 'py_mes_not_working')
+        Avbot.bot.send('antonio_carlos', msg, 'py_mes_not_working')
+        # Conditional Contacts 
+        if cafs: Avbot.bot.send('wesley', msg, 'py_mes_not_working')
+        if cbof or clcfp: Avbot.bot.send('wanderson', msg, 'py_mes_not_working')
+
+##########################################################################################################################
+#                                                   ONE MINUTE SCHEDULE                                                  #
+##########################################################################################################################
+
+@Avbot.bot.misc.schedule.each.one.minute.do
+def one_minute_scheudule():
+    py_mes_check_cimios()
+
+##########################################################################################################################
 #                                                    ONE HOUR SCHEDULE                                                   #
 ##########################################################################################################################
 
 @Avbot.bot.misc.schedule.each.one.hour.do.at('00:00')
 def one_hour_scheudule():
-    Avbot.bot.misc.requests.get('http://192.168.17.61:8085/misc/one_hour_schedule.php')
+    Avbot.bot.misc.requests.get('http://localhost:8085/misc/one_hour_schedule.php')
     # Avbot.bot.send('grupo_trefila', Lam.frio.prod(), 'schedule::lam.frio.prod(grupo_trefila)')
     # Avbot.bot.send('calegari', Lam.quente.prod(), 'schedule::lam.quente.prod(calegari)')
     torqueOff.send_off()
@@ -1023,6 +1211,7 @@ if __name__ == '__main__':
     Avbot.start()
     # Test Bot
     __test__()
+    Avbot.bot.misc.call.safe(py_mes_check_cimios)()
     # Keep Alive
     Avbot.keepalive()
 
