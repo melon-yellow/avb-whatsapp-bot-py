@@ -219,12 +219,17 @@ class Bot:
 
             # Init SQL
             def __init__(self):
-                # Set MySQL Objects
-                self.mysql = self.bot.misc.log.mysql
-                self.user = self.mysql.kwargs['user']
-                self.password = self.mysql.kwargs['password']
                 # Set Connection Status Object
                 self.__conn__ = None
+
+            # Set SQL Connection
+            def sqlconn(self, mysqlconn):
+                # Set MySQL Objects
+                self.mysql = mysqlconn
+                self.user = self.mysql.kwargs['user']
+                self.password = self.mysql.kwargs['password']
+                # Set Logs SQL Connection
+                self.bot.misc.log.sqlconn(self.mysql)
 
             @property
             def bot(self):
@@ -232,14 +237,16 @@ class Bot:
 
             # Check MySQL Link
             def __link__(self):
-                conn = self.mysql.conn
-                if self.__conn__ != conn:
-                    self.__conn__ = conn
-                    l1 = 'Connection with MySQL Established'
-                    l2 = 'No Connection with MySQL'
-                    log = l1 if conn else l2
-                    self.bot.log(log)
-                return self.__conn__
+                try: # Try Connection
+                    conn = self.mysql.conn
+                    if self.__conn__ != conn:
+                        self.__conn__ = conn
+                        l1 = 'Connection with MySQL Established'
+                        l2 = 'No Connection with MySQL'
+                        log = l1 if conn else l2
+                        self.bot.log(log)
+                    return self.__conn__
+                except: return False
 
             # Start MySQL Connection
             def start(self):
@@ -360,7 +367,7 @@ class Bot:
 
                 # Quote Message
                 def quote(self, msg, log='api::quote_msg'):
-                    return self.msg.send(self.__from__, msg, log, self.id)
+                    return self.msg.send(self.author, msg, log, self.id)
 
             # Send Message
             def send(self, to, text, log='api::send_msg', quote_id=None):
@@ -477,18 +484,20 @@ class Bot:
         self.api = self.misc.api(log=False).host('0.0.0.0').port(1516)
 
         # Set Bot Actions
-        self.actions = Actions('/bot', self.api)
+        self.actions = Actions('/bot/', self.api)
         self.actions.user('bot').password('vet89u43t0jw234erwedf21sd9R78fe2n2084u')
 
         # Set Bot Interface Actions
-        iactions = Actions('/ibot', self.api)
+        iactions = Actions('/ibot/', self.api)
         iactions.user('bot').password('ert2tyt3tQ3423rubu99ibasid8hya8da76sd')
         self.interf = Interface(iactions)
+
+        # Set Bot SQL Object
+        self.sql = SQL()
 
         # Set Global Objects
         self.message = Message()
         self.chat = Chat()
-        self.sql = SQL()
 
         # Add Action Send
         @self.add('send_msg')
@@ -520,6 +529,10 @@ class Bot:
     # Logging
     def log(self, log):
         return self.bot.misc.log(log)
+
+    # MySQL Connection
+    def sqlconn(self, mysqlconn):
+        self.sql.sqlconn(mysqlconn)
 
     # Start API App
     def start(self):

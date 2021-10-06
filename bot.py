@@ -26,12 +26,18 @@ Avbot = Bot()
 # Create Connection
 def MySQL(database):
     return Avbot.bot.misc.mysql(
-        host = '127.0.0.1', port = '1517', user = Avbot.sql.user,
-        password = Avbot.sql.password, database = database)
+        host = '127.0.0.1', port = '1517', user = 'root',
+        password = 'vet89u43t0jw234erwedf21sd9R78fe2n2084u',
+        database = database
+    )
 
-# Instance Object
+# Instance Objects
+bot_db = MySQL('bot')
 lam_db = MySQL('lam')
 iba_db = MySQL('pda')
+
+# Set Avbot SQL Connection
+Avbot.bot.sqlconn(bot_db)
 
 ##########################################################################################################################
 #                                                    CLASSE LAMINADOR                                                    #
@@ -347,31 +353,124 @@ class ParadasTrefila:
 stopTref = ParadasTrefila()
 
 ##########################################################################################################################
-#                                                    PDA MILL STATUS                                                     #
+#                                                   PDA MILL STATUS CAUSE                                                #
+##########################################################################################################################
+
+# Get General Cause
+def get_cause(data, status):
+    # Check Index
+    if not Avbot.check(data, 'master', list): return ''
+    if not Avbot.check(data, 'area', dict): return ''
+    if len(data['master']) != 2: return ''
+
+    # All Areas
+    areas = dict(
+        CTR = ['RM','IM','FM'],
+        MIL = ['RM','IM','FM'],
+        ROD = ['WR','STELM'],
+        RAX = ['WR','STELM'],
+        VCH = ['CH'],
+        COL = ['COOL'],
+        BARH = ['BARH','STACK']
+    )
+
+    # Check PLCs
+    plcsr = list(areas.keys())
+    plcs = list(data['area'].keys())
+    if (Avbot.misc.json.dumps(plcsr) !=
+        Avbot.misc.json.dumps(plcs)): return ''
+
+    # Check Areas
+    for p in plcs:
+        if not isinstance(data['area'][p], list): return ''
+        if len(data['area'][p]) != (len(areas[p]) * 2): return ''
+
+    # Get Cause Text
+    text = ''
+    if status == 'gap_off': text = '' + data['master'][0]
+    if status == 'cobble': text = '' + data['master'][1]
+    if text == '': return ''
+
+    # Iter 16 Times
+    for r in range(16):
+        # Iter Over PLCs
+        brk = False
+        for p in areas:
+            plc = areas[p]
+            # Iter Over Areas 
+            for area in plc:
+                i = -1
+                comp = '<{}/{}/{}>'.format(p, area, '{}')
+                if text == comp.format('SB'): i = len(plc)
+                if text == comp.format('PB'): i = 0
+                if i < 0: continue
+                # Update Text
+                a = plc.index(area)
+                text = '' + data['area'][p][a + i]
+                brk = True
+                break
+            # Check Break
+            if brk: break
+        # Check Full Break
+        if not brk: break
+
+    # Return Text
+    return text
+
+##########################################################################################################################
+#                                                      PDA MILL STATUS                                                   #
 ##########################################################################################################################
 
 # Status do Laminador
 @Avbot.add('pda_mill_status')
 def pda_mill_status(req):
+    # Check Request
     if not Avbot.check(req, 'status', str): raise Exception('key "status" not found')
+    if not Avbot.check(req, 'data', dict): raise Exception('key "data" not found')
     status = req['status']
+    data = req['data']
+
     # Options Dictionary
     switcher = dict(
-        gap = 'Laminador no GAP‍! 🙏💰',
-        stop = 'Laminador parado! 🤷‍♂️💸‍',
+        ghost = 'Passando barra fantasma!',
+        exit_fur = 'Peça saindo do forno!',
         start = 'Laminador produzindo! 🙏',
-        cobble = 'Sucata no laminador! 🤦💸💸‍',
-        gap_off = 'O GAP foi desligado! 🤷‍♂️🐢'
+        stop = 'Laminador parado! 🤷‍♂️💸‍',
+        gap = 'Laminador no GAP‍! 🙏💰',
+        gap_off = 'O GAP foi desligado! 🤷‍♂️🐢',
+        cobble = 'Sucata no laminador! 🤦💸💸‍'
     )
+
+    # Check Status Key
     if status not in switcher: return False
+
+    # Get Message Text
     log = 'api::pda_mill_status({})'.format(status)
     msg = switcher[status]
+    msg_ = '' + msg
+
+    # Add postfix to Cobble messages
     if status == 'cobble': msg = '\n'.join(
         (msg, 'Favor executar ordem de liberação de equipamento no ITSS após retirada da sucata.')
     )
-    # Send Message
-    Avbot.bot.send('gerencia_laminacao', msg, log)
-    Avbot.bot.send('anthony', msg, log)
+
+    # Send Messages
+    Avbot.bot.send('grupo_supervisores', msg, log)
+
+    # Send only Start/Stop Messages
+    if status != 'ghost' and status != 'exit_fur':
+        Avbot.bot.send('gerencia_laminacao', msg, log)
+
+    # Get Cause
+    if status == 'cobble' or status == 'gap_off':
+        cause = get_cause(data, status)
+        if isinstance(cause, str) and cause != '':
+            msg_ = (msg_ + '\n' + '_Motivo: ' + cause + '_')
+        # Dump Json
+        Avbot.misc.json.dump(req, open('pda_mill_status.json', 'w'))
+    
+    # Send Message with Cause
+    Avbot.bot.send('anthony', msg_, log)
 
 ##########################################################################################################################
 #                                                   PDA TREFILA STATUS                                                   #
@@ -1138,8 +1237,8 @@ def py_mes_check_cimios():
             txt = ''
             for i in range(cnt):
                 txt += tar[i]
-                if i < (cnt - 2): txt += ','
-                if i == (cnt - 2): txt += 'e'
+                if i < (cnt - 2): txt += ', '
+                if i == (cnt - 2): txt += ' e '
             
             # Check For More Than One Issue
             if cnt == 1: msg += 'O Cim-IO {} está com problemas!'.format(txt)
