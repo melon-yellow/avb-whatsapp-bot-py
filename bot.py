@@ -447,12 +447,19 @@ def pda_mill_status(req):
     # Get Message Text
     log = 'api::pda_mill_status({})'.format(status)
     msg = switcher[status]
-    msg_ = '' + msg
 
     # Add postfix to Cobble messages
-    if status == 'cobble': msg = '\n'.join(
-        (msg, 'Favor executar ordem de liberação de equipamento no ITSS após retirada da sucata.')
-    )
+    # if status == 'cobble': msg = '\n'.join(
+    #     (msg, 'Favor executar ordem de liberação de equipamento no ITSS após retirada da sucata.')
+    # )
+
+    # Get Cause
+    if status == 'cobble' or status == 'gap_off':
+        cause = get_cause(data, status)
+        if isinstance(cause, str) and cause != '':
+            msg = (msg + '\n' + '_Motivo: ' + cause + '_')
+        # Dump Json
+        Avbot.misc.json.dump(req, open('pda_mill_status.json', 'w'))
 
     # Send Messages
     Avbot.bot.send('grupo_supervisores', msg, log)
@@ -461,16 +468,8 @@ def pda_mill_status(req):
     if status != 'ghost' and status != 'exit_fur':
         Avbot.bot.send('gerencia_laminacao', msg, log)
 
-    # Get Cause
-    if status == 'cobble' or status == 'gap_off':
-        cause = get_cause(data, status)
-        if isinstance(cause, str) and cause != '':
-            msg_ = (msg_ + '\n' + '_Motivo: ' + cause + '_')
-        # Dump Json
-        Avbot.misc.json.dump(req, open('pda_mill_status.json', 'w'))
-    
     # Send Message with Cause
-    Avbot.bot.send('anthony', msg_, log)
+    Avbot.bot.send('anthony', msg, log)
 
 ##########################################################################################################################
 #                                                   PDA TREFILA STATUS                                                   #
