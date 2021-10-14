@@ -10,7 +10,7 @@ class Bot:
 
         # Import Miscellaneous
         import sys
-        sys.path.append('E:/python/misc')
+        sys.path.append('E:/python/py-misc')
         from miscellaneous import Miscellaneous
 
         # Instance Misc
@@ -138,77 +138,6 @@ class Bot:
                 except: data = None
                 # If Success
                 return dict(done=True, data=data)
-
-        ##########################################################################################################################
-        #                                                         INTERFACE                                                      #
-        ##########################################################################################################################
-
-        # Interface Class
-        class Interface:
-            def __init__(self, actions):
-                # Interface Actions Object
-                self.actions = actions
-                # Set Connection Status Object
-                self.__conn__ = None
-
-            @property
-            def bot(self):
-                return bot
-
-            # Interface
-            def req(self, req, ignore=False):
-                # Check Parameters
-                if not (self.__conn__ or ignore): return False
-                try: # Try Request
-                    r = self.bot.misc.requests.post(
-                        'http://127.0.0.1:1615/bot',
-                        auth=('bot', self.actions.__route__.__password__),
-                        json=req,
-                    )
-                # Handle Error
-                except: return False
-                # Return Response
-                return r
-
-            @property
-            def conn(self):
-                try: # Try Block
-                    r = self.req(None, True)
-                    if r == False: raise Exception('Request Failed')
-                    else: r.raise_for_status()
-                except self.bot.misc.requests.exceptions.ConnectionError: return False
-                except self.bot.misc.requests.exceptions.HTTPError: return False
-                except self.bot.misc.requests.exceptions.Timeout: return False
-                except: return False
-                return True
-
-            # Check Node Link
-            def __link__(self):
-                # Check for Changes
-                conn = self.conn
-                if self.__conn__ != conn:
-                    self.__conn__ = conn
-                    l1 = 'Connection with Node Established'
-                    l2 = 'No Connection with Node'
-                    log = l1 if conn else l2
-                    self.bot.log(log)
-                # Return Connection Status
-                return self.__conn__
-
-            # Add Action
-            def add(self, name, log=True):
-                return self.actions.add(name, log)
-
-            # Start Interface App
-            def start(self):
-                # Check Link Cyclically
-                self.bot.misc.schedule.each.one.second.do(self.__link__)
-                try: # Get Bot Phone Number
-                    req = self.req(dict(action='host_device'), True)
-                    data = req.json()['data']
-                    self.bot.id = data['wid']['user']
-                except: return False
-                return True
         
         ##########################################################################################################################
         #                                                           SQL                                                          #
@@ -254,160 +183,6 @@ class Bot:
                 self.bot.misc.schedule.each.one.second.do(self.__link__)
 
         ##########################################################################################################################
-        #                                                       MESSAGE CLASS                                                    #
-        ##########################################################################################################################
-
-        # Message Class
-        class Message:
-            def __init__(self):
-                # Set Reply
-                self.reply = self.Reply()
-                # Constructor of Sent Messages
-                self.sent = self.bot.misc.construct(self.Sent)
-
-            @property
-            def bot(self):
-                return bot
-
-            # Reply Class
-            class Reply:
-                def __init__(self):
-                    # Set Replyables
-                    self.__replyables__ = dict()
-                    # Add Action
-                    self.bot.interf.add('on_reply')(self.__execute__)
-
-                @property
-                def bot(self): return bot
-
-                @property
-                def msg(self):
-                    return self.bot.message
-
-                # Add Reply
-                def add(self, msg_id, function):
-                    # Check Parameters
-                    if not callable(function):
-                        return False
-                    # Delete Old Replyable
-                    try: del self.__replyables__[msg_id]
-                    except: self.__replyables__[msg_id] = None
-                    # Add to Dictionary
-                    self.__replyables__[msg_id] = self.bot.misc.call.safe(function)
-                    return True
-
-                # On Reply
-                def __execute__(self, req):
-                    # Check Parameters
-                    if (('msg_id' not in req)
-                        or (req['msg_id'] not in self.__replyables__)
-                        or ('reply' not in req)):
-                        return False
-                    # Get Reply
-                    reply = req['reply']
-                    msg_id = req['msg_id']
-                    # Construct Reply
-                    reply = self.msg.sent(reply)
-                    # Execute Function
-                    data = self.__replyables__[msg_id](reply)
-                    # Return Data
-                    return data
-
-            # Sent Class
-            class Sent:
-                # Init Message
-                def __init__(self, msg=None):
-
-                    # Fix msg
-                    if type(msg) != dict:
-                        self.raw_data = {
-                            'id': None,
-                            'to': None,
-                            'body': None,
-                            'from': None,
-                            'author': None,
-                            'isGroupMsg': False,
-                        }
-                    else: self.raw_data = msg
-                    # Set Default Reply
-                    self.__reply__ = (lambda: None)
-                    # Try Catch Block
-                    try: # Get Quoted
-                        q = self.raw_data['quotedMsgObj']
-                        self.quoted = self.__class__(q)
-                    except: q = None
-
-                @property
-                def bot(self): return bot
-                @property
-                def msg(self): return self.bot.message
-                @property
-                def id(self): return self.raw_data['id']
-                @property
-                def to(self): return self.raw_data['to']
-                @property
-                def body(self): return self.raw_data['body']
-                @property
-                def __from__(self): return self.raw_data['from']
-
-                @property
-                def author(self):
-                    return (
-                        self.raw_data['author']
-                        if self.raw_data['isGroupMsg']
-                        else self.raw_data['from']
-                    )
-
-                # On Reply
-                def reply(self, function):
-                    if type(self.id) != str: return function
-                    self.__reply__ = self.bot.misc.call.safe(function)
-                    self.msg.reply.add(self.id, self.__reply__)
-                    return self.__reply__
-
-                # Quote Message
-                def quote(self, msg, log='api::quote_msg'):
-                    return self.msg.send(self.author, msg, log, self.id)
-
-            # Send Message
-            def send(self, to, text, log='api::send_msg', quote_id=None):
-                # Check Parameters
-                if (not (isinstance(to, str) or to == None)
-                    or not (isinstance(text, str) or text == None)
-                    or not (isinstance(log, str) or log == None)
-                    or not (isinstance(quote_id, str) or quote_id == None)):
-                    return False
-                # Interface Send Message
-                sent = self.bot.interf.req(
-                    dict(
-                        action='send_msg',
-                        to = to,
-                        text = text,
-                        log = log,
-                        quote_id = quote_id,
-                        reply_url = 'http://gusal2:1516/ibot'
-                    )
-                )
-                # On Interface Error
-                if sent == False: return False
-                # Convert to Json
-                else: sent = sent.json()
-                # Fix Errors
-                if 'done' not in sent: return False
-                if not sent['done']: return False
-                # Construct Message
-                sent = self.sent(sent['data'])
-                # Logging
-                log = 'api::send_msg' if type(log) != str else log
-                self.bot.log('Sent({}) To({})'.format(log, to))
-                # Return Sent
-                return sent
-
-            # Caller to Send
-            def __call__(self, *args, **kwargs):
-                return self.send(*args, **kwargs)
-
-        ##########################################################################################################################
         #                                                      CHAT CLASS                                                        #
         ##########################################################################################################################
 
@@ -418,7 +193,7 @@ class Bot:
 
             # Clean Message
             def clean(self, message, lower=True):
-                if isinstance(message, Message.Sent):
+                if isinstance(message, Message):
                     strin = self.bot.misc.copy.deepcopy(message.body)
                 elif isinstance(message, str):
                     strin = self.bot.misc.copy.deepcopy(message)
@@ -496,7 +271,7 @@ class Bot:
         self.sql = SQL()
 
         # Set Global Objects
-        self.message = Message()
+        self.whapp = Whapp()
         self.chat = Chat()
 
         # Add Action Send
@@ -520,15 +295,15 @@ class Bot:
 
     # Add Action
     def add(self, name, log=True):
-        return self.bot.actions.add(name, log)
+        return self.actions.add(name, log)
 
     # Check Request
     def check(self, req, param, clas=None):
-        return self.bot.actions.check(req, param, clas)
+        return self.actions.check(req, param, clas)
 
     # Logging
     def log(self, log):
-        return self.bot.misc.log(log)
+        return self.misc.log(log)
 
     # MySQL Connection
     def sqlconn(self, mysqlconn):
@@ -552,11 +327,11 @@ class Bot:
 
     # Keep Alive
     def keepalive(self):
-        self.bot.misc.keepalive()
+        self.misc.keepalive()
 
     # Send Message
     def send(self, *args, **kwargs):
-        return self.bot.message.send(*args, **kwargs)
+        return self.whapp.send(*args, **kwargs)
 
 
 ##########################################################################################################################
