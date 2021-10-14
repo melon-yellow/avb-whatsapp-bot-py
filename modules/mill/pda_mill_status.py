@@ -1,16 +1,11 @@
 import sys
 import json
 import requests
-
-# Import Miscellaneous Class
-sys.path.append('E:/python/misc')
-from miscellaneous import Miscellaneous
-misc = Miscellaneous()
+import py_misc
 
 # Import Message Class
-sys.path.append('F:/pda/avbot/core')
-from whapp import Whapp
-whapp = Whapp(misc, target)
+from ..core import Whapp
+whapp = Whapp(py_misc, target)
 
 # Get Input Params
 target = json.load(open('F:/pda/avbot/core/target.json', 'r'))
@@ -59,11 +54,6 @@ def pda_mill_status(req):
     # Get Message Text
     log = 'api::pda_mill_status({})'.format(status)
     msg = switcher[status]
-
-    # Add postfix to Cobble messages
-    # if status == 'cobble': msg = '\n'.join(
-    #     (msg, 'Favor executar ordem de liberação de equipamento no ITSS após retirada da sucata.')
-    # )
 
     # Get Cause
     if status == 'cobble' or status == 'gap_off':
