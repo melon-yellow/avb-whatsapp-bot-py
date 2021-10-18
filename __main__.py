@@ -1,23 +1,38 @@
 
 ##########################################################################################################################
-#                                                        AVBOT                                                           #
+#                                                       PY-AVBOT-61                                                      #
 ##########################################################################################################################
 #                                                                                                                        #
-#                                                     Avbot v1.9.3                                                       #
+#                                                 Whatsapp Bot for AVB                                                   #
 #                                          Multi-language API for Whatsapp Bot                                           #
 #                             ---------------- Python3 -- NodeJS -- MySQL ----------------                               #
-#                                             This is a Development Server                                               #
-#                                                 Powered by venom-bot                                                   #
+#                                                * Under Development *                                                   #
+#                                    https://github.com/anthony-freitas/py-avbot-61                                      #
 #                                                                                                                        #
 ##########################################################################################################################
-#                                                      MAIN CODE                                                         #
+#                                                        MAIN CODE                                                       #
 ##########################################################################################################################
 
-# Imports
-from core import Bot
+# Import Whatsapp Bot
+from py_wapp import Bot
+
+##########################################################################################################################
+#                                                    INSTANCE WAPP BOT                                                   #
+##########################################################################################################################
 
 # Create Instance of Bot
-Avbot = Bot()
+Avbot = Bot({
+    'addr':'http://localhost:1615/bot',
+    'auth':{
+        'user':'avb.whatsapp',
+        'password':'ert2tyt3tQ3423rubu99ibasid8hya8da76sd'
+    }
+})
+
+# Set Authentication
+Avbot.port(1516).user('avb.whatsapp').password(
+    'vet89u43t0jw234erwedf21sd9R78fe2n2084u'
+)
 
 ##########################################################################################################################
 #                                                       SQL CONNECT                                                      #
@@ -25,8 +40,8 @@ Avbot = Bot()
 
 # Create Connection
 def MySQL(database):
-    return Avbot.bot.misc.mysql(
-        host = '127.0.0.1', port = '1517', user = 'root',
+    return Avbot.misc.mysql(
+        host = 'localhost', port = '1517', user = 'root',
         password = 'vet89u43t0jw234erwedf21sd9R78fe2n2084u',
         database = database
     )
@@ -1254,7 +1269,7 @@ def py_mes_check_cimios():
 #                                                   ONE MINUTE SCHEDULE                                                  #
 ##########################################################################################################################
 
-@Avbot.bot.misc.schedule.each.one.minute.do
+@Avbot.misc.schedule.each.one.minute.do
 def one_minute_scheudule():
     py_mes_check_cimios()
 
@@ -1262,7 +1277,7 @@ def one_minute_scheudule():
 #                                                    ONE HOUR SCHEDULE                                                   #
 ##########################################################################################################################
 
-@Avbot.bot.misc.schedule.each.one.hour.do.at('00:00')
+@Avbot.misc.schedule.each.one.hour.do.at('00:00')
 def one_hour_scheudule():
     Avbot.bot.misc.requests.get('http://localhost:8085/misc/one_hour_schedule.php')
     # Avbot.bot.send('grupo_trefila', Lam.frio.prod(), 'schedule::lam.frio.prod(grupo_trefila)')
@@ -1274,8 +1289,8 @@ def one_hour_scheudule():
 ##########################################################################################################################
 
 # Test Function
-@Avbot.bot.misc.call.safe
-def __test__():
+@Avbot.misc.call.safe
+def avbot_start_chat():
     # Wait 3 seconds
     Avbot.bot.misc.time.sleep(3)
     # Send Message
@@ -1303,13 +1318,20 @@ def __test__():
 #                                                        KEEP ALIVE                                                      #
 ##########################################################################################################################
 
-# If Main
+# If Executed as Main
 if __name__ == '__main__':
+
     # Start Avbot
     Avbot.start()
-    # Test Bot
-    __test__()
-    Avbot.bot.misc.call.safe(py_mes_check_cimios)()
+    
+    # Send Python Avbot Started
+    avbot_start_chat()
+    
+    # Check PIMS Cim-IOs
+    Avbot.misc.call.safe(
+        py_mes_check_cimios
+    )()
+    
     # Keep Alive
     Avbot.keepalive()
 
