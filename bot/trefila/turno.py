@@ -138,7 +138,7 @@ class ParadasTrefila:
     def send_options(self, to):
         # Get Stop Cause Options
         op = self.get_options()
-        #Generate List Message
+        # Generate List Message
         msg_op = 'Escolha uma ou mais das opções abaixo:\n\n'
         for item in op:
             no = str(item[0])
@@ -153,7 +153,7 @@ class ParadasTrefila:
 
     # Send Message with Options
     def quote_options(self, to, sent_id):
-        #Generate Message
+        # Generate Message
         msg = 'Aqui estão as opções!'
         # Send Options
         sent = Avbot.bot.send(to, msg, 'quote_options', sent_id)
