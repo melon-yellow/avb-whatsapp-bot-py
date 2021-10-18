@@ -1,3 +1,5 @@
+from py_wapp import Bot
+
 ##########################################################################################################################
 #                                                    CLASSE LAMINADOR                                                    #
 ##########################################################################################################################
@@ -5,13 +7,15 @@
 # Laminador Class
 class Laminador:
 
-    def __init__(self):
+    def __init__(self, bot: Bot):
+        self.misc = bot.misc
+        
         # General Methods for Lam
         class Gen:
 
             def __init__(self):
                 # Allow info inside Turno
-                self.misc = Avbot.misc
+                self.misc = bot.misc
 
             # Relatorio Producao
             def prod(self):
