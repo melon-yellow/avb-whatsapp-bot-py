@@ -24,13 +24,13 @@ from py_wapp import Bot
 Avbot = Bot({
     'addr':'http://localhost:1615/bot',
     'auth':{
-        'user':'avb.whatsapp',
+        'user':'gusal2.avb.whatsapp',
         'password':'ert2tyt3tQ3423rubu99ibasid8hya8da76sd'
     }
 })
 
 # Set Authentication
-Avbot.port(1516).user('avb.whatsapp').password(
+Avbot.port(1516).user('gusal2.avb.whatsapp').password(
     'vet89u43t0jw234erwedf21sd9R78fe2n2084u'
 )
 
