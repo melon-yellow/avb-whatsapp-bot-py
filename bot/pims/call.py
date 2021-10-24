@@ -1,8 +1,14 @@
+
+##########################################################################################################################
+
+from py_wapp import Bot
+from .check import PyMESCheck
+
 ##########################################################################################################################
 #                                                   ONE MINUTE SCHEDULE                                                  #
 ##########################################################################################################################
 
-def py_mes_check_cimios():
+def py_mes_check_cimios(Avbot: Bot, pyMesCheck: PyMESCheck):
     # Update Timestamps
     pyMesCheck.update()
 
@@ -53,8 +59,10 @@ def py_mes_check_cimios():
             else: msg += 'Os Cim-IOs {} estão com problemas!'.format(txt)
 
         # Send Message
-        Avbot.bot.send('anthony', msg, 'py_mes_not_working')
-        Avbot.bot.send('antonio_carlos', msg, 'py_mes_not_working')
+        Avbot.send('anthony', msg, 'py_mes_not_working')
+        Avbot.send('antonio_carlos', msg, 'py_mes_not_working')
         # Conditional Contacts 
-        if cafs: Avbot.bot.send('wesley', msg, 'py_mes_not_working')
-        if cbof or clcfp: Avbot.bot.send('wanderson', msg, 'py_mes_not_working')
+        if cafs: Avbot.send('wesley', msg, 'py_mes_not_working')
+        if cbof or clcfp: Avbot.send('wanderson', msg, 'py_mes_not_working')
+        
+##########################################################################################################################

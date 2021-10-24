@@ -17,6 +17,11 @@
 from py_wapp import Bot
 
 ##########################################################################################################################
+
+from pims.check import PyMESCheck
+from pims.call import py_mes_check_cimios
+
+##########################################################################################################################
 #                                                    INSTANCE WAPP BOT                                                   #
 ##########################################################################################################################
 
@@ -40,7 +45,7 @@ Avbot.port(1516).user('gusal2.avb.whatsapp').password(
 
 # Create Connection
 def MySQL(database):
-    return Avbot.misc.mysql(
+    return Avbot.misc.MySQL(
         host = 'localhost', port = '1517', user = 'root',
         password = 'vet89u43t0jw234erwedf21sd9R78fe2n2084u',
         database = database
@@ -54,8 +59,9 @@ iba_db = MySQL('pda')
 # Set Avbot SQL Connection
 Avbot.bot.sqlconn(bot_db)
 
-# Instance Object
+# Instance Objects
 stopTref = ParadasTrefila()
+pyMesCheck = PyMESCheck(Avbot.misc)
 
 ##########################################################################################################################
 #                                                   ONE MINUTE SCHEDULE                                                  #
@@ -63,7 +69,7 @@ stopTref = ParadasTrefila()
 
 @Avbot.misc.schedule.each.one.minute.do
 def one_minute_scheudule():
-    py_mes_check_cimios()
+    py_mes_check_cimios(Avbot, pyMesCheck)
 
 ##########################################################################################################################
 #                                                    ONE HOUR SCHEDULE                                                   #

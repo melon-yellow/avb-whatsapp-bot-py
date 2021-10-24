@@ -1,13 +1,29 @@
+
+##########################################################################################################################
+
+from ..paradas_turno import ClasseTurno
+
 ##########################################################################################################################
 #                                                     GET DATA TREFILA                                                   #
 ##########################################################################################################################
 
+# Class Paradas-Trefila
 class ParadasTrefila:
-    def __init__(self):
+    
+    # Init Paradas Trefila
+    def __init__(self, turno: ClasseTurno):
         self.turno = turno
+        
+    @property
+    def bot(self):
+        return self.turno.bot
+    
+    @property
+    def misc(self):
+        return self.bot.misc
 
     # Get Last Stop
-    def get_last(self, mq):
+    def get_last(self, mq: int):
         # Create Query
         query = ' '.join(('SELECT * FROM lam_frio_interr_turno',
             'WHERE timestamp = (SELECT MAX(timestamp)',
@@ -28,7 +44,7 @@ class ParadasTrefila:
         return dif
 
     # Get Difference
-    def assemble(self, mq, starting):
+    def assemble(self, mq: int, starting: bool):
         last = self.get_last(mq)
         stop_time = self.turno.timestamp
         stop_date = last[1] if last != None else self.turno.timestamp.date()
@@ -46,7 +62,7 @@ class ParadasTrefila:
         return dat
 
     # Insert into MySQL
-    def insert_stop(self, dat, message_id):
+    def insert_stop(self, dat: dict[str, str], message_id: str):
         # Add Id to Dat
         dat['message_id'] = message_id
         query = ' '.join(('INSERT INTO lam_frio_interr_turno',
@@ -146,7 +162,7 @@ class ParadasTrefila:
             msg_op += no + ' - '
             msg_op += str(item[1]) + '\n'
         # Send Options
-        sent = Avbot.bot.send(to, msg_op, 'trf_stop_options')
+        sent = self.bot.send(to, msg_op, 'trf_stop_options')
         # Insert on MySQL
         e = self.insert_sent_options(sent.id)
         return sent
@@ -156,7 +172,7 @@ class ParadasTrefila:
         # Generate Message
         msg = 'Aqui estão as opções!'
         # Send Options
-        sent = Avbot.bot.send(to, msg, 'quote_options', sent_id)
+        sent = self.bot.send(to, msg, 'quote_options', sent_id)
         # Insert on MySQL
         e = self.insert_sent_options(sent.id, True)
         return sent
@@ -165,7 +181,7 @@ class ParadasTrefila:
     def show_options(self, to):
         # Get Last Stop Options
         lts = self.get_last_sent_options()
-        mn3 = self.turno.timestamp - self.turno.bot.misc.datetime.timedelta(days=3)
+        mn3 = self.turno.timestamp - self.misc.datetime.timedelta(days=3)
         if lts == None:
             self.send_options(to)
             lts = self.get_last_sent_options()
@@ -179,3 +195,5 @@ class ParadasTrefila:
     # Close Connection
     def close(self):
         self = None
+        
+##########################################################################################################################

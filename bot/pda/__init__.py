@@ -1,3 +1,8 @@
+
+##########################################################################################################################
+
+import py_misc
+
 ##########################################################################################################################
 #                                                      CLASSE IBA PDA                                                    #
 ##########################################################################################################################
@@ -5,13 +10,13 @@
 # Laminador Class
 class PDA:
 
-    iba_db = iba_db
-
-    @property
-    def bot(self): return Avbot.bot
-
-    @property
-    def misc(self): return self.bot.misc
+    def __init__(
+        self,
+        misc: py_misc,
+        pda_db: py_misc.MySQL
+    ):
+        self.misc = misc
+        self.db = pda_db
 
     # Get Timestamp from IBA
     def timestamp(self, t):
@@ -20,5 +25,4 @@ class PDA:
         timestamp = self.misc.datetime.datetime(**kwargs)
         return timestamp
 
-# Instance Class
-pda = PDA()
+##########################################################################################################################
