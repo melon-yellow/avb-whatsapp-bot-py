@@ -17,7 +17,7 @@ from .. import iba
 ##########################################################################################################################
 
 # Load Actions
-def __load__(bot: Bot, lam_db: MySQL):
+def __load__(bot: Bot, db: MySQL):
     
     ##########################################################################################################################
 
@@ -45,16 +45,18 @@ def __load__(bot: Bot, lam_db: MySQL):
             d -= datetime.timedelta(days=1)
 
         # Create Query
-        def qur(tb):
-            return ' '.join(('SELECT * FROM `{}` WHERE (`turno` = {}',
-                'AND `date` = \'{}\') ORDER BY `timestamp`')).format(tb, t, d)
+        makequery = (lambda tb: ' '.join((
+            'SELECT * FROM `{}` WHERE (`turno` = {}',
+            'AND `date` = \'{}\') ORDER BY `timestamp`'
+            )).format(tb, t, d)
+        )
         # Get queries
-        query1 = qur('lam_frio_interr_turno')
-        query2 = qur('lam_frio_interr_causa')
+        query1 = makequery('lam_frio_interr_turno')
+        query2 = makequery('lam_frio_interr_causa')
 
         # Execute Query
-        paradas = lam_db.get(query1)
-        causas = lam_db.get(query2)
+        paradas = db.get(query1)
+        causas = db.get(query2)
         
         ##########################################################################################################################
 
@@ -108,7 +110,7 @@ def __load__(bot: Bot, lam_db: MySQL):
                 'WHERE (message_id = \'{}\' OR message_id = \'{}\')',
                 'ORDER BY `timestamp` DESC')).format(item[7], item[8])
             # Execute Query
-            cause = lam_db.get(query)
+            cause = db.get(query)
             cause = list() if len(cause) == 0 else cause[0]
             if len(cause) > 0: cause = json.loads(cause[4])
             return cause
@@ -129,7 +131,7 @@ def __load__(bot: Bot, lam_db: MySQL):
             ca = get_cause(item)
             if len(ca) == 0: return 'causa não declarada'
             cause = ''
-            op = stops.get_options(lam_db)
+            op = stops.get_options(db)
             op[0][1] = 'causa não listada'
             for c in range(len(ca)):
                 sep = ('' if c == 0 else (' e ' if (c == len(ca) - 1) else ', '))
@@ -183,7 +185,7 @@ def __load__(bot: Bot, lam_db: MySQL):
                 '(`timestamp`, `date`, `turno`, `mq`, `sec`, `util`)',
                 'VALUES (%s, %s, %s, %s, %s, %s)'))
             val = (t_pda, d, t, mq, util[0], util[mq])
-            lam_db.execute(query, val)
+            db.execute(query, val)
 
         # Iterate over Util
         for i in range(5):
@@ -195,7 +197,7 @@ def __load__(bot: Bot, lam_db: MySQL):
             query_last_turno = ' '.join(('SELECT * FROM `lam_frio_util`',
                 'WHERE (`turno` = {} AND `date` = \'{}\')',
                 'ORDER BY `mq`')).format(t-8, d)
-            last_turno = lam_db.get(query_last_turno)
+            last_turno = db.get(query_last_turno)
             # Check for Data
             if len(last_turno) == 0:
                 send_report = False

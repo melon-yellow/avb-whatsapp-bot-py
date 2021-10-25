@@ -5,7 +5,7 @@
 from py_misc import MySQL
 from py_wapp import Bot
 
-# modules
+# Modules
 from . import stops
 from . import report
 from . import status
@@ -14,8 +14,8 @@ from . import turno
 #################################################################################################################################################
 
 # Load Modules
-def __load__(bot: Bot, lam_db: MySQL):
-    report.__load__(bot, lam_db)
-    status.__load__(bot, lam_db)
+def __load__(bot: Bot, db: MySQL):
+    report.__load__(bot, db)
+    status.__load__(bot, db)
 
 #################################################################################################################################################

@@ -17,7 +17,7 @@ from . import stops
 ##########################################################################################################################
 
 # Load Actions
-def __load__(bot: Bot, lam_db: MySQL):
+def __load__(bot: Bot, db: MySQL):
     
     ##########################################################################################################################
 
@@ -40,6 +40,8 @@ def __load__(bot: Bot, lam_db: MySQL):
         # Assemble Data
         starting = (status == 'start')
         dat = stops.assemble(mq, starting)
+        
+        ##########################################################################################################################
 
         # If Starting
         if starting:
@@ -64,11 +66,15 @@ def __load__(bot: Bot, lam_db: MySQL):
             sent = bot.send('anthony', msg, log)
 
         # Insert to MySQL
-        e = stops.insert_stop(lam_db, dat, sent.id)
+        e = stops.insert_stop(db, dat, sent.id)
+        
+        ##########################################################################################################################
 
         # On Reply
         @sent.reply
         def add_cause(message):
+            
+            ##########################################################################################################################
 
             # On Ambiguous Message
             def ambiguous_msg(msg, has_float=False):
@@ -89,6 +95,8 @@ def __load__(bot: Bot, lam_db: MySQL):
                 sent_ambig = bot.send('anthony', ambig, log, msg.id)
                 sent_ambig.reply(add_cause)
                 return False
+            
+            ##########################################################################################################################
 
             # Verify Cause
             def verify_causas(msg):
@@ -106,16 +114,20 @@ def __load__(bot: Bot, lam_db: MySQL):
                 for i in range(len(causas)):
                     causas[i] = int(causas[i].lstrip('0'))
                 return causas
+            
+            ##########################################################################################################################
 
             # Check for Existing Cause
-            __cause__ = stops.get_cause(lam_db, sent.id)
+            __cause__ = stops.get_cause(db, sent.id)
+            
+            ##########################################################################################################################
 
             # If Cause does not Exist
             if __cause__ == None:
                 causas = verify_causas(message)
                 if causas == False: return False
                 causas_json = json.dumps(causas)
-                stops.insert_cause(lam_db, sent.id, causas_json)
+                stops.insert_cause(db, sent.id, causas_json)
 
             else: # If cause already Exists
                 msg = stops.turno.chat.causa_ja_existe
@@ -128,7 +140,7 @@ def __load__(bot: Bot, lam_db: MySQL):
                         causas = verify_causas(confirm)
                         if causas == False: return False
                         causas_json = json.dumps(causas)
-                        stops.insert_cause(lam_db, sent.id, causas_json)
+                        stops.insert_cause(db, sent.id, causas_json)
                         sent2.reply(lambda: None)
                     # On Negative
                     elif bot.chat.no(confirm):
