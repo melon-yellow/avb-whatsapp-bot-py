@@ -43,7 +43,9 @@ Avbot.port(1516).user('gusal2.avb.whatsapp').password(
 
 # Create Connection
 makesql = (lambda db: Avbot.misc.MySQL(
-    host = 'localhost', port = '1517', user = 'root',
+    host = 'localhost',
+    port = '1517',
+    user = 'root',
     password = 'vet89u43t0jw234erwedf21sd9R78fe2n2084u',
     database = db
 ))
