@@ -60,7 +60,7 @@ class ClasseTurno:
     ):
         self.bot = bot
         self.lam_db = lam_db
-        self.chat = ChatTurno(self.misc)
+        self.chat = ChatTurno(self.bot)
         
     @property
     def misc(self):
