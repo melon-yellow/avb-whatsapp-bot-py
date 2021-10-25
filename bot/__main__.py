@@ -13,16 +13,16 @@
 #                                                        MAIN CODE                                                       #
 ##########################################################################################################################
 
-# Import Whatsapp Bot
+# Imports
+import requests
 from py_wapp import Bot
 
-##########################################################################################################################
+# Modules
+from . import iba
+from . import pims
+from . import torque
+from . import trefila
 
-from pims.check import PyMESCheck
-from pims.call import py_mes_check_cimios
-
-##########################################################################################################################
-#                                                    INSTANCE WAPP BOT                                                   #
 ##########################################################################################################################
 
 # Create Instance of Bot
@@ -40,98 +40,78 @@ Avbot.port(1516).user('gusal2.avb.whatsapp').password(
 )
 
 ##########################################################################################################################
-#                                                       SQL CONNECT                                                      #
-##########################################################################################################################
 
 # Create Connection
-def MySQL(database):
-    return Avbot.misc.MySQL(
-        host = 'localhost', port = '1517', user = 'root',
-        password = 'vet89u43t0jw234erwedf21sd9R78fe2n2084u',
-        database = database
-    )
-
-# Instance Objects
-bot_db = MySQL('bot')
-lam_db = MySQL('lam')
-iba_db = MySQL('pda')
-
-# Set Avbot SQL Connection
-Avbot.bot.sqlconn(bot_db)
-
-# Instance Objects
-stopTref = ParadasTrefila()
-pyMesCheck = PyMESCheck(Avbot.misc)
+makesql = (lambda db: Avbot.misc.MySQL(
+    host = 'localhost', port = '1517', user = 'root',
+    password = 'vet89u43t0jw234erwedf21sd9R78fe2n2084u',
+    database = db
+))
 
 ##########################################################################################################################
-#                                                   ONE MINUTE SCHEDULE                                                  #
+
+# Set Avbot SQL Connection
+Avbot.sqlconn(makesql('bot'))
+
+##########################################################################################################################
+
+# Load Actions from Trefila
+trefila.__load__(Avbot, makesql('lam'))
+
 ##########################################################################################################################
 
 @Avbot.misc.schedule.each.one.minute.do
 def one_minute_scheudule():
-    py_mes_check_cimios(Avbot, pyMesCheck)
+    pims.check.cimios(Avbot)
 
-##########################################################################################################################
-#                                                    ONE HOUR SCHEDULE                                                   #
 ##########################################################################################################################
 
 @Avbot.misc.schedule.each.one.hour.do.at('00:00')
 def one_hour_scheudule():
-    Avbot.bot.misc.requests.get('http://localhost:8085/misc/one_hour_schedule.php')
-    # Avbot.bot.send('grupo_trefila', Lam.frio.prod(), 'schedule::lam.frio.prod(grupo_trefila)')
-    # Avbot.bot.send('calegari', Lam.quente.prod(), 'schedule::lam.quente.prod(calegari)')
-    torqueOff.send_off()
+    torque.off.send(Avbot)
+    requests.get('http://localhost:8085/misc/one_hour_schedule.php')
+    # Avbot.send('grupo_trefila', Lam.frio.prod(), 'schedule::lam.frio.prod(grupo_trefila)')
+    # Avbot.send('calegari', Lam.quente.prod(), 'schedule::lam.quente.prod(calegari)')
 
 ##########################################################################################################################
-#                                                           TESTING                                                      #
-##########################################################################################################################
 
-# Test Function
-@Avbot.misc.call.safe
-def avbot_start_chat():
-    # Wait 3 seconds
-    Avbot.bot.misc.time.sleep(3)
-    # Send Message
-    sent = Avbot.bot.send('anthony', 'Python Avbot Started!', 'py_warning')
-    @sent.reply
-    def abc123(message):
-        sent2 = message.quote('Got It!', 'got_reply')
-        @sent2.reply
-        def xyz789(message):
-            sent3 = message.quote('Am i one of the Dummies?', 'not_so_dummy?')
-            @sent3.reply
-            def yfw234(message):
-                # On Affirmative
-                if Avbot.bot.chat.yes(message):
-                    sent4 = message.quote(':(', 'avbot_is_sad')
-                # On Negative
-                elif Avbot.bot.chat.no(message):
-                    sent4 = message.quote(':)', 'avbot_is_happy')
-                # On Neither
-                else: # Get Error Understanding
-                    sentL = message.quote(':|', 'avbot_is_confused')
-                    sentL.reply(yfw234)
+# Start Avbot
+Avbot.start()
 
 ##########################################################################################################################
-#                                                        KEEP ALIVE                                                      #
+
+# Wait 3 seconds
+Avbot.misc.time.sleep(3)
+# Send Message
+sent = Avbot.send('anthony', 'Python Avbot Started!', 'py_warning')
+@sent.reply
+def abc123(message):
+    sent2 = message.quote('Got It!', 'got_reply')
+    @sent2.reply
+    def xyz789(message):
+        sent3 = message.quote('Am i one of the Dummies?', 'not_so_dummy?')
+        @sent3.reply
+        def yfw234(message):
+            # On Affirmative
+            if Avbot.chat.yes(message):
+                sent4 = message.quote(':(', 'avbot_is_sad')
+            # On Negative
+            elif Avbot.chat.no(message):
+                sent4 = message.quote(':)', 'avbot_is_happy')
+            # On Neither
+            else: # Get Error Understanding
+                sentL = message.quote(':|', 'avbot_is_confused')
+                sentL.reply(yfw234)
+
 ##########################################################################################################################
 
-# If Executed as Main
-if __name__ == '__main__':
+# Check PIMS Cim-IOs
+pims.check.cimios(Avbot)
 
-    # Start Avbot
-    Avbot.start()
-    
-    # Send Python Avbot Started
-    avbot_start_chat()
-    
-    # Check PIMS Cim-IOs
-    Avbot.misc.call.safe(
-        py_mes_check_cimios
-    )()
-    
-    # Keep Alive
-    Avbot.keepalive()
+##########################################################################################################################
+
+# Keep Main Thread Alive
+Avbot.keepalive()
 
 ##########################################################################################################################
 #                                                         END                                                            #
