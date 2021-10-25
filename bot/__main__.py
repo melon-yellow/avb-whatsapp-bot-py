@@ -88,13 +88,13 @@ Avbot.start()
 Avbot.misc.time.sleep(3)
 # Send Message
 sent = Avbot.send('anthony', 'Python Avbot Started!', 'py_warning')
-@sent.reply
+@sent.on.reply
 def abc123(message):
     sent2 = message.quote('Got It!', 'got_reply')
-    @sent2.reply
+    @sent2.on.reply
     def xyz789(message):
         sent3 = message.quote('Am i one of the Dummies?', 'not_so_dummy?')
-        @sent3.reply
+        @sent3.on.reply
         def yfw234(message):
             # On Affirmative
             if Avbot.chat.yes(message):
