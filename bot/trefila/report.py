@@ -2,7 +2,7 @@
 #                                                    REPORT TREFILA TURNO                                                #
 ##########################################################################################################################
 
-# Relaatorio Turno Trefila
+# Relatorio Turno Trefila
 @Avbot.add('pda_trf_report')
 def pda_trf_report(req):
     if not Avbot.check(req, 't', list): raise Exception('key "t" not found')
