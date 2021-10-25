@@ -70,8 +70,8 @@ def one_minute_scheudule():
 
 @Avbot.misc.schedule.each.one.hour.do.at('00:00')
 def one_hour_scheudule():
-    torque.off.send(Avbot)
     requests.get('http://localhost:8085/misc/one_hour_schedule.php')
+    torque.off.send(Avbot)
     # Avbot.send('grupo_trefila', Lam.frio.prod(), 'schedule::lam.frio.prod(grupo_trefila)')
     # Avbot.send('calegari', Lam.quente.prod(), 'schedule::lam.quente.prod(calegari)')
 
