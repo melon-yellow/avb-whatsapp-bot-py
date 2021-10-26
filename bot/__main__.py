@@ -14,6 +14,7 @@
 ##########################################################################################################################
 
 # Imports
+import py_misc
 import requests
 from py_wapp import Bot
 
@@ -27,7 +28,7 @@ from . import laminador
 ##########################################################################################################################
 
 # Create Instance of Bot
-Avbot = Bot({
+avbot = Bot({
     'addr':'http://localhost:1615/bot',
     'auth':{
         'user':'gusal2.avb.whatsapp',
@@ -36,14 +37,14 @@ Avbot = Bot({
 })
 
 # Set Authentication
-Avbot.port(1516).user('gusal2.avb.whatsapp').password(
+avbot.port(1516).user('gusal2.avb.whatsapp').password(
     'vet89u43t0jw234erwedf21sd9R78fe2n2084u'
 )
 
 ##########################################################################################################################
 
 # Create Connection
-makesql = (lambda db: Avbot.misc.MySQL(
+makesql = (lambda db: py_misc.MySQL(
     host = 'localhost',
     port = '1517',
     user = 'root',
@@ -54,40 +55,40 @@ makesql = (lambda db: Avbot.misc.MySQL(
 ##########################################################################################################################
 
 # Set Avbot SQL Connection
-Avbot.sqlconn(makesql('bot'))
+avbot.sqlconn(makesql('bot'))
 
 ##########################################################################################################################
 
 # Load Actions
-laminador.__load__(Avbot)
-trefila.__load__(Avbot, makesql('lam'))
+laminador.__load__(avbot)
+trefila.__load__(avbot, makesql('lam'))
 
 ##########################################################################################################################
 
-@Avbot.misc.schedule.each.one.minute.do
+@py_misc.schedule.each.one.minute.do
 def one_minute_scheudule():
-    pims.check.cimios(Avbot)
+    pims.check.cimios(avbot)
 
 ##########################################################################################################################
 
-@Avbot.misc.schedule.each.one.hour.do.at('00:00')
+@py_misc.schedule.each.one.hour.do.at('00:00')
 def one_hour_scheudule():
     requests.get('http://localhost:8085/misc/one_hour_schedule.php')
-    torque.off.send(Avbot)
+    torque.off.send(avbot)
     # Avbot.send('grupo_trefila', Lam.frio.prod(), 'schedule::lam.frio.prod(grupo_trefila)')
     # Avbot.send('calegari', Lam.quente.prod(), 'schedule::lam.quente.prod(calegari)')
 
 ##########################################################################################################################
 
 # Start Avbot
-Avbot.start()
+avbot.start()
 
 ##########################################################################################################################
 
 # Wait 3 seconds
-Avbot.misc.time.sleep(3)
+py_misc.time.sleep(3)
 # Send Message
-sent = Avbot.send('anthony', 'Python Avbot Started!', 'py_warning')
+sent = avbot.send('anthony', 'Python Avbot Started!', 'py_warning')
 @sent.on.reply
 def abc123(message):
     sent2 = message.quote('Got It!', 'got_reply')
@@ -97,10 +98,10 @@ def abc123(message):
         @sent3.on.reply
         def yfw234(message):
             # On Affirmative
-            if Avbot.chat.yes(message):
+            if avbot.chat.yes(message):
                 sent4 = message.quote(':(', 'avbot_is_sad')
             # On Negative
-            elif Avbot.chat.no(message):
+            elif avbot.chat.no(message):
                 sent4 = message.quote(':)', 'avbot_is_happy')
             # On Neither
             else: # Get Error Understanding
@@ -110,12 +111,12 @@ def abc123(message):
 ##########################################################################################################################
 
 # Check PIMS Cim-IOs
-pims.check.cimios(Avbot)
+pims.check.cimios(avbot)
 
 ##########################################################################################################################
 
 # Keep Main Thread Alive
-Avbot.keepalive()
+avbot.keepalive()
 
 ##########################################################################################################################
 #                                                         END                                                            #
