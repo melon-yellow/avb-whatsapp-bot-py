@@ -22,7 +22,7 @@ services:
 ##########################################################################################################################
 
   whatsapp:
-    image: python:3.11
+    image: python:3.10
     container_name: whatsapp
     build: ./whatsapp
     command: py -m .
