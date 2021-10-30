@@ -1,1 +1,9 @@
+
+# cache
 **/__pycache__/
+
+# db
+/db/data/
+
+# env
+.env

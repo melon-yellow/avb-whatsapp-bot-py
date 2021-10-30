@@ -1,0 +1,30 @@
+
+version: "3"
+
+services:
+
+  db:
+    image: mysql:8
+    container_name: db
+    build: ./db
+    command: --default-authentication-plugin=mysql_native_password
+    env_file: .env
+    volumes:
+      - ./db/data/:/var/lib/mysql
+    ports:
+      - "${MYSQL_PORT}:3306"
+    restart: always
+
+  whatsapp:
+    image: python:3.11
+    container_name: whatsapp
+    build: ./whatsapp
+    command: bash -c "py -m ."
+    env_file: .env
+    volumes:
+      - ./whatsapp/:/usr/app/
+    ports:
+      - "${WHATSAPP_PORT}:${WHATSAPP_PORT}"
+    depends_on:
+      - db
+    restart: always
