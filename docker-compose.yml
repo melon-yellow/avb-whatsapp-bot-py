@@ -9,7 +9,7 @@ services:
 
   db:
     image: mysql:8
-    container_name: db-w-py61
+    container_name: db-w-61
     build: ./db
     command: --default-authentication-plugin=mysql_native_password
     env_file: .env
@@ -23,9 +23,9 @@ services:
 
   whatsapp:
     image: python:3.10
-    container_name: whatsapp-py61
+    container_name: whatsapp-61
     build: ./whatsapp
-    command: py -m .
+    command: python -m .
     env_file: .env
     volumes:
       - ./whatsapp/:/usr/app/
