@@ -25,7 +25,7 @@ services:
     image: python:3.11
     container_name: whatsapp
     build: ./whatsapp
-    command: bash -c "py -m ."
+    command: py -m .
     env_file: .env
     volumes:
       - ./whatsapp/:/usr/app/
