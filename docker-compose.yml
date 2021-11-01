@@ -25,7 +25,7 @@ services:
     image: python:3.10
     container_name: whatsapp-61
     build: ./whatsapp
-    command: python .
+    command: bash -c "pip install -r requirements.txt && cd .. && python -m app"
     env_file: .env
     volumes:
       - ./whatsapp/:/usr/app/

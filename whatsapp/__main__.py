@@ -14,6 +14,7 @@
 ##########################################################################################################################
 
 # Imports
+import os
 import py_misc
 import requests
 from py_wapp import Bot
@@ -29,26 +30,31 @@ from . import laminador
 
 # Create Instance of Bot
 avbot = Bot({
-    'addr':'http://localhost:1615/bot',
+    'addr': os.getenv('WHATSAPP_TARGET_ADDR'),
     'auth':{
-        'user':'gusal2.avb.whatsapp',
-        'password':'n2u95n345bu345u34sdsnujdisj3w3wq3ng32'
+        'user': os.getenv('WHATSAPP_TARGET_USER'),
+        'password': os.getenv('WHATSAPP_TARGET_PASSWORD')
     }
 })
 
+##########################################################################################################################
+
+# Set API Port
+avbot.port(1516)
+
 # Set Authentication
-avbot.port(1516).user('gusal2.avb.whatsapp').password(
-    'vet89u43t0jw234erwedf21sd9R78fe2n2084u'
-)
+for i in range(os.getenv('WHATSAPP_USERS')):
+    avbot.user(os.getenv(f'WHATSAPP_USER_${i + 1}'))
+    avbot.password(os.getenv(f'WHATSAPP_PASSWORD_${i + 1}'))
 
 ##########################################################################################################################
 
 # Create Connection
 makesql = (lambda db: py_misc.MySQL(
     host = 'localhost',
-    port = '1517',
-    user = 'root',
-    password = 'vet89u43t0jw234erwedf21sd9R78fe2n2084u',
+    port = os.getenv('MYSQL_PORT'),
+    user = os.getenv('MYSQL_USER'),
+    password = os.getenv('MYSQL_PASSWORD'),
     database = db
 ))
 

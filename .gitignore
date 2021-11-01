@@ -2,6 +2,9 @@
 # cache
 **/__pycache__/
 
+# dependencies
+/whatsapp/src/
+
 # db
 /db/data/
 
