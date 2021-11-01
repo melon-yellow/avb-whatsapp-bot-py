@@ -40,7 +40,7 @@ avbot = Bot({
 ##########################################################################################################################
 
 # Set API Port
-avbot.port(1516)
+avbot.port(os.getenv('WHATSAPP_PORT'))
 
 # Set Authentication
 for i in range(os.getenv('WHATSAPP_USERS')):
