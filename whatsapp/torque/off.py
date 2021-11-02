@@ -67,7 +67,7 @@ def send(bot: Bot):
     msg = ' '.join(('Na ultima hora os torques das',
         'seguintes gaiolas ficaram fora do normal:'))
     for i in m:
-        msg += '\nGaiola {}: {} vezes'.format(i['std'], i['times'])
+        msg += f'\nGaiola {i["std"]}: {i["times"]} vezes'
     # send message
     bot.send('anthony', msg, 'api::pda_mill_m_off(scheduled)')
 

@@ -46,9 +46,9 @@ def __load__(bot: Bot, db: MySQL):
 
         # Create Query
         makequery = (lambda tb: ' '.join((
-            'SELECT * FROM `{}` WHERE (`turno` = {}',
-            'AND `date` = \'{}\') ORDER BY `timestamp`'
-            )).format(tb, t, d)
+            f'SELECT * FROM `{tb}` WHERE (`turno` = {t}',
+            f'AND `date` = \'{d}\') ORDER BY `timestamp`'
+            ))
         )
         # Get queries
         query1 = makequery('lam_frio_interr_turno')
@@ -107,8 +107,8 @@ def __load__(bot: Bot, db: MySQL):
             if item[8] == None: item[8] = 'NULL'
             # Create Query
             query = ' '.join(('SELECT * FROM `lam_frio_interr_causa`',
-                'WHERE (message_id = \'{}\' OR message_id = \'{}\')',
-                'ORDER BY `timestamp` DESC')).format(item[7], item[8])
+                f'WHERE (message_id = \'{item[7]}\' OR message_id = \'{item[8]}\')',
+                'ORDER BY `timestamp` DESC'))
             # Execute Query
             cause = db.get(query)
             cause = list() if len(cause) == 0 else cause[0]
@@ -117,17 +117,17 @@ def __load__(bot: Bot, db: MySQL):
 
         # Create Message
         def turn(h):
-            return '{}{}:00'.format('0' if len(str(h)) < 2 else '', h)
+            return '0' if len(str(h)) < 2 else '' + f'{h}:00'
 
         # get stop duration
-        def format_dur(item):
+        def _dur(item):
             if item[6] != None:
                 delt = datetime.timedelta(seconds=item[6])
                 return bot.chat.timedelta(delt)
             else: return 'duração indeterminada'
 
         # get stop cause
-        def format_cause(item):
+        def _cause(item):
             ca = get_cause(item)
             if len(ca) == 0: return 'causa não declarada'
             cause = ''
@@ -151,9 +151,9 @@ def __load__(bot: Bot, db: MySQL):
             '------------------------------------------------------',
             '🤖 *Relatório de Paradas Trefila* 👾',
             '------------------------------------------------------',
-            '📋 *Produção dia {}*'.format(d.strftime('%d/%m/%Y')),
-            '🕒 *Turno das {} às {}*'.format(turn(t), turn(t+8)),
-            '🔠 *Turma {}*'.format(turma),
+            f'📋 *Produção dia {d.strftime("%d/%m/%Y")}*',
+            f'🕒 *Turno das {turn(t)} às {turn(t + 8)}*',
+            f'🔠 *Turma {turma}*',
             '------------------------------------------------------'
         ))
 
@@ -165,13 +165,11 @@ def __load__(bot: Bot, db: MySQL):
             paradas = []
             for item in maquina:
                 # append stop
-                paradas.append('⚠️ Parada de {} por {}'.format(
-                    format_dur(item), format_cause(item)
-                ))
+                paradas.append(f'⚠️ Parada de {_dur(item)} por {_cause(item)}')
             # append div to message
             msg += '\n'.join((
                 '',
-                '*Máquina {}:*'.format(1 + paradas.index(maquina)),
+                f'*Máquina {1 + paradas.index(maquina)}:*',
                 '------------------------------------------------------',
                 '\n'.join(paradas),
                 '------------------------------------------------------'
@@ -195,8 +193,8 @@ def __load__(bot: Bot, db: MySQL):
         def get_util_turno(util):
             # get data from last shift
             query_last_turno = ' '.join(('SELECT * FROM `lam_frio_util`',
-                'WHERE (`turno` = {} AND `date` = \'{}\')',
-                'ORDER BY `mq`')).format(t-8, d)
+                f'WHERE (`turno` = {t - 8} AND `date` = \'{d}\')',
+                'ORDER BY `mq`'))
             last_turno = db.get(query_last_turno)
             # Check for Data
             if len(last_turno) == 0:
@@ -274,19 +272,19 @@ def __load__(bot: Bot, db: MySQL):
             '',
             '*Utilização:*',
             '------------------------------------------------------',
-            '📊 Utilização M2 (Turno): {}%'.format(ut['u2']),
-            '📊 Utilização M3 (Turno): {}%'.format(ut['u3']),
-            '📊 Utilização M4 (Turno): {}%'.format(ut['u4']),
-            '📊 Utilização M5 (Turno): {}%'.format(ut['u5']),
-            '📊 *Utilização Global: {}%*'.format(ut['u']),
+            f'📊 Utilização M2 (Turno): {ut["u2"]}%',
+            f'📊 Utilização M3 (Turno): {ut["u3"]}%',
+            f'📊 Utilização M4 (Turno): {ut["u4"]}%',
+            f'📊 Utilização M5 (Turno): {ut["u5"]}%',
+            f'📊 *Utilização Global: {ut["u"]}%*',
             '------------------------------------------------------',
             '*Tempo Parado:*',
             '------------------------------------------------------',
-            '⚠️ Tempo parado M2 (Turno): {}'.format(ut['t2']),
-            '⚠️ Tempo parado M3 (Turno): {}'.format(ut['t3']),
-            '⚠️ Tempo parado M4 (Turno): {}'.format(ut['t4']),
-            '⚠️ Tempo parado M5 (Turno): {}'.format(ut['t5']),
-            '⚠️ *Paradas Totais no Turno: {}*'.format(ut['t']),
+            f'⚠️ Tempo parado M2 (Turno): {ut["t2"]}',
+            f'⚠️ Tempo parado M3 (Turno): {ut["t3"]}',
+            f'⚠️ Tempo parado M4 (Turno): {ut["t4"]}',
+            f'⚠️ Tempo parado M5 (Turno): {ut["t5"]}',
+            f'⚠️ *Paradas Totais no Turno: {ut["t"]}*',
             '------------------------------------------------------',
             ''
         ))

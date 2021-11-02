@@ -34,7 +34,7 @@ def __load__(bot: Bot, db: MySQL):
             start = '😁 Máquina {} ligada!'
         )
         if status not in switcher: return False
-        log = 'api::pda_trf_status({}, {})'.format(mq, status)
+        log = f'api::pda_trf_status({mq}, {status})'
         msg = switcher[status].format(mq)
 
         # Assemble Data
@@ -50,11 +50,11 @@ def __load__(bot: Bot, db: MySQL):
                 sec = dat['tempo_parado']
                 d = datetime.timedelta(seconds=sec)
                 parada = bot.chat.timedelta(d)
-                msg += '\n⏱️ {} de parada.'.format(parada)
+                msg += f'\n⏱️ {parada} de parada.'
             # Quest Group
             gmsg = copy.deepcopy(msg)
             msg_quest = stops.turno.chat.pergunta_parada
-            gmsg += '\n🗒️ {} Escolha entre as opções da lista.'.format(msg_quest)
+            gmsg += f'\n🗒️ {msg_quest} Escolha entre as opções da lista.'
             quote = stops.show_options(bot, 'anthony')
             # Send Message
             bot.send('jayron', msg, log)

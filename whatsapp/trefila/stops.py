@@ -14,9 +14,11 @@ from . import turno
 # Get Last Stop
 def get_last(db: MySQL, mq: int):
     # Create Query
-    query = ' '.join(('SELECT * FROM lam_frio_interr_turno',
+    query = ' '.join(
+        ('SELECT * FROM lam_frio_interr_turno',
         'WHERE timestamp = (SELECT MAX(timestamp)',
-        'FROM lam_frio_interr_turno WHERE mq = {})')).format(mq)
+        f'FROM lam_frio_interr_turno WHERE mq = {mq})')
+    )
     # Execute Query
     last = db.get(query)
     last = None if len(last) == 0 else last[0]
@@ -59,13 +61,17 @@ def assemble(mq: int, starting: bool):
 def insert_stop(db: MySQL, dat: dict[str, str], message_id: str):
     # Add Id to Dat
     dat['message_id'] = message_id
-    query = ' '.join(('INSERT INTO lam_frio_interr_turno',
+    query = ' '.join(
+        ('INSERT INTO lam_frio_interr_turno',
         '(`timestamp`, `date`, `turno`, `mq`, `starting`,',
         '`stop`, `tempo_parado`, `message_id`, `stop_id`)',
-        'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)'))
-    val = (dat['timestamp'], dat['date'], dat['turno'], dat['mq'],
+        'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)')
+    )
+    val = (
+        dat['timestamp'], dat['date'], dat['turno'], dat['mq'],
         dat['starting'], dat['stop'], dat['tempo_parado'],
-        dat['message_id'], dat['stop_id'])
+        dat['message_id'], dat['stop_id']
+    )
     # Execute Query
     inserted = db.execute(query, val)
     return inserted
@@ -73,10 +79,12 @@ def insert_stop(db: MySQL, dat: dict[str, str], message_id: str):
 ##########################################################################################################################
 
 # Get Last Stop
-def get_stop(db: MySQL, msg_id: str):
+def get_stop(db: MySQL, id: str):
     # Create Query
-    query = ' '.join(('SELECT * FROM lam_frio_interr_turno',
-        'WHERE (message_id = \'{}\')')).format(msg_id)
+    query = ' '.join(
+        ('SELECT * FROM lam_frio_interr_turno',
+        f'WHERE (message_id = \'{id}\')')
+    )
     # Execute Query
     stop = db.get(query)
     stop = None if len(stop) == 0 else stop[0]
@@ -85,10 +93,12 @@ def get_stop(db: MySQL, msg_id: str):
 ##########################################################################################################################
 
 # Get Last Stop
-def get_cause(db: MySQL, msg_id: str):
+def get_cause(db: MySQL, id: str):
     # Create Query
-    query = ' '.join(('SELECT * FROM lam_frio_interr_causa',
-        'WHERE (message_id = \'{}\')')).format(msg_id)
+    query = ' '.join(
+        ('SELECT * FROM lam_frio_interr_causa',
+        f'WHERE (message_id = \'{id}\')')
+    )
     # Execute Query
     cause = db.get(query)
     cause = None if len(cause) == 0 else cause[0]
@@ -148,9 +158,11 @@ def insert_sent_options(db: MySQL, message_id: str, quote: bool = False):
 def get_last_sent_options(db: MySQL, quote: bool = False):
     # Create Query
     cond = 'OR sent = \'lam_frio_interr_options_quote\'' if quote else ''
-    query = ' '.join(('SELECT * FROM sent_misc',
-        'WHERE timestamp = (SELECT MAX(timestamp) FROM sent_misc',
-        'WHERE sent = \'lam_frio_interr_options\' {})')).format(cond)
+    query = ' '.join(
+        ('SELECT * FROM sent_misc WHERE timestamp =',
+        '(SELECT MAX(timestamp) FROM sent_misc',
+        f'WHERE sent = \'lam_frio_interr_options\' {cond})')
+    )
     # Execute Query
     last = db.get(query)
     last = None if len(last) == 0 else last[0]

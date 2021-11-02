@@ -55,8 +55,8 @@ def cimios(bot: Bot):
                 if i == (cnt - 2): txt += ' e '
             
             # Check For More Than One Issue
-            if cnt == 1: msg += 'O Cim-IO {} está com problemas!'.format(txt)
-            else: msg += 'Os Cim-IOs {} estão com problemas!'.format(txt)
+            if cnt == 1: msg += f'O Cim-IO {txt} está com problemas!'
+            else: msg += f'Os Cim-IOs {txt} estão com problemas!'
 
         # Send Message
         bot.send('anthony', msg, 'py_mes_not_working')
