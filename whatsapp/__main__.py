@@ -81,8 +81,8 @@ def one_minute_scheudule():
 def one_hour_scheudule():
     requests.get('http://localhost:8085/misc/one_hour_schedule.php')
     torque.off.send(avbot)
-    # Avbot.send('grupo_trefila', Lam.frio.prod(), 'schedule::lam.frio.prod(grupo_trefila)')
-    # Avbot.send('calegari', Lam.quente.prod(), 'schedule::lam.quente.prod(calegari)')
+    # Avbot.send(to='grupo_trefila', text=lam.frio.prod(), log='schedule::lam.frio.prod(grupo_trefila)')
+    # Avbot.send(to='calegari', text=lam.quente.prod(), log='schedule::lam.quente.prod(calegari)')
 
 ##########################################################################################################################
 
@@ -94,24 +94,24 @@ avbot.start()
 # Wait 3 seconds
 py_misc.time.sleep(3)
 # Send Message
-sent = avbot.send('anthony', 'Python Avbot Started!', 'py_warning')
+sent = avbot.send(to='anthony', text='Python Avbot Started!', log='py_warning')
 @sent.on.reply
-def abc123(message):
-    sent2 = message.quote('Got It!', 'got_reply')
+def abc123(message: Bot.Message):
+    sent2 = message.quote(text='Got It!', log='got_reply')
     @sent2.on.reply
-    def xyz789(message):
-        sent3 = message.quote('Am i one of the Dummies?', 'not_so_dummy?')
+    def xyz789(message: Bot.Message):
+        sent3 = message.quote(text='Am i one of the Dummies?', log='not_so_dummy?')
         @sent3.on.reply
-        def yfw234(message):
+        def yfw234(message: Bot.Message):
             # On Affirmative
             if avbot.chat.yes(message):
-                sent4 = message.quote(':(', 'avbot_is_sad')
+                sent4 = message.quote(text=':(', log='avbot_is_sad')
             # On Negative
             elif avbot.chat.no(message):
-                sent4 = message.quote(':)', 'avbot_is_happy')
+                sent4 = message.quote(text=':)', log='avbot_is_happy')
             # On Neither
             else: # Get Error Understanding
-                sentL = message.quote(':|', 'avbot_is_confused')
+                sentL = message.quote(text=':|', log='avbot_is_confused')
                 sentL.reply(yfw234)
 
 ##########################################################################################################################

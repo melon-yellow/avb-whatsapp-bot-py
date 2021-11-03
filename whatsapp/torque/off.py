@@ -69,6 +69,6 @@ def send(bot: Bot):
     for i in m:
         msg += f'\nGaiola {i["std"]}: {i["times"]} vezes'
     # send message
-    bot.send('anthony', msg, 'api::pda_mill_m_off(scheduled)')
+    bot.send(to='anthony', text=msg, log='api::pda_mill_m_off(scheduled)')
 
 ##########################################################################################################################

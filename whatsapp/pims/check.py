@@ -59,10 +59,10 @@ def cimios(bot: Bot):
             else: msg += f'Os Cim-IOs {txt} estão com problemas!'
 
         # Send Message
-        bot.send('anthony', msg, 'py_mes_not_working')
-        bot.send('antonio_carlos', msg, 'py_mes_not_working')
+        bot.send(to='anthony', text=msg, log='py_mes_not_working')
+        bot.send(to='antonio_carlos', text=msg, log='py_mes_not_working')
         # Conditional Contacts 
-        if cafs: bot.send('wesley', msg, 'py_mes_not_working')
-        if cbof or clcfp: bot.send('wanderson', msg, 'py_mes_not_working')
+        if cafs: bot.send(to='wesley', text=msg, log='py_mes_not_working')
+        if cbof or clcfp: bot.send(to='wanderson', text=msg, log='py_mes_not_working')
         
 ##########################################################################################################################

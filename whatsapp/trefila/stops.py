@@ -182,7 +182,7 @@ def send_options(bot: Bot, to: str):
         msg_op += no + ' - '
         msg_op += str(item[1]) + '\n'
     # Send Options
-    sent = bot.send(to, msg_op, 'trf_stop_options')
+    sent = bot.send(to=to, text=msg_op, log='trf_stop_options')
     # Insert on MySQL
     e = insert_sent_options(sent.id)
     return sent
@@ -190,11 +190,11 @@ def send_options(bot: Bot, to: str):
 ##########################################################################################################################
 
 # Send Message with Options
-def quote_options(bot: Bot, to: str, sent_id: str):
+def quote_options(bot: Bot, to: str, id: str):
     # Generate Message
     msg = 'Aqui estão as opções!'
     # Send Options
-    sent = bot.send(to, msg, 'quote_options', sent_id)
+    sent = bot.send(to=to, text=msg, log='quote_options', quote=id)
     # Insert on MySQL
     e = insert_sent_options(sent.id, True)
     return sent

@@ -295,9 +295,9 @@ def __load__(bot: Bot, db: MySQL):
         log = 'turno_trefila_report'
         # send message
         if send_report:
-            # bot.send('grupo_trefila', msg, log)
-            bot.send('anthony', msg, log)
-            bot.send('jayron', msg, log)
+            # bot.send(to='grupo_trefila', text=msg, log=log)
+            bot.send(to='anthony', text=msg, log=log)
+            bot.send(to='jayron', text=msg, log=log)
         # Return True
         return True
     

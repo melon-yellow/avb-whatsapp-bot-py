@@ -57,13 +57,13 @@ def __load__(bot: Bot, db: MySQL):
             gmsg += f'\n🗒️ {msg_quest} Escolha entre as opções da lista.'
             quote = stops.show_options(bot, 'anthony')
             # Send Message
-            bot.send('jayron', msg, log)
-            # bot.send('anthony', msg, log)
-            # sent = bot.send('grupo_trefila', gmsg, log, quote)
-            sent = bot.send('anthony', gmsg, log, quote)
+            bot.send(to='jayron', text=msg, log=log)
+            sent = bot.send(to='anthony', text=gmsg, log=log, quote=quote)
+            # sent = bot.send(to='grupo_trefila', text=gmsg, log=log, quote=quote)
         else: # If Not Starting
-            bot.send('jayron', msg, log)
-            sent = bot.send('anthony', msg, log)
+            bot.send(to='jayron', text=msg, log=log)
+            sent = bot.send(to='anthony', text=msg, log=log)
+            # sent = bot.send(to='grupo_trefila', text=msg, log=log)
 
         # Insert to MySQL
         e = stops.insert_stop(db, dat, sent.id)
@@ -92,7 +92,7 @@ def __load__(bot: Bot, db: MySQL):
                 ambig = ' '.join(r1 if has_float else r2)
                 # Send Message
                 log = 'sent_ambiguous_message'
-                sent_ambig = bot.send('anthony', ambig, log, msg.id)
+                sent_ambig = bot.send(to='anthony', text=ambig, log=log, quote=msg.id)
                 sent_ambig.reply(add_cause)
                 return False
             
@@ -131,7 +131,7 @@ def __load__(bot: Bot, db: MySQL):
 
             else: # If cause already Exists
                 msg = stops.turno.chat.causa_ja_existe
-                sent2 = message.quote(msg, 'trf_status_got_existing')
+                sent2 = message.quote(text=msg, log='trf_status_got_existing')
                 # On Reply
                 @sent2.reply
                 def new_cause(confirm):
@@ -148,7 +148,7 @@ def __load__(bot: Bot, db: MySQL):
                     # On Neither
                     else: # Get Error Understanding
                         error = bot.chat.error.understand
-                        sentL = confirm.quote(error, 'trf_status_didnt_got_it')
+                        sentL = confirm.quote(text=error, log='trf_status_didnt_got_it')
                         sentL.reply(new_cause)
                         
 ##########################################################################################################################
