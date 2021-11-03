@@ -29,6 +29,7 @@ services:
     env_file: .env
     volumes:
       - ./whatsapp/:/usr/app/
+      - /usr/local/lib/python3.10/site-packages/
     ports:
       - "${WHATSAPP_PORT}:${WHATSAPP_PORT}"
     depends_on:
