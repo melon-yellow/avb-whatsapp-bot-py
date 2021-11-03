@@ -43,7 +43,9 @@ avbot = Bot({
 avbot.port(os.getenv('WHATSAPP_PORT'))
 
 # Set Authentication
-for i in range(os.getenv('WHATSAPP_USERS')):
+for i in range(
+    int(os.getenv('WHATSAPP_USERS'))
+):
     avbot.user(os.getenv(f'WHATSAPP_USER_${i + 1}'))
     avbot.password(os.getenv(f'WHATSAPP_PASSWORD_${i + 1}'))
 
