@@ -30,35 +30,47 @@ from . import laminador
 
 # Create Instance of Bot
 avbot = Bot({
-    'addr': os.getenv('WHATSAPP_TARGET_ADDR'),
-    'auth':{
-        'user': os.getenv('WHATSAPP_TARGET_USER'),
-        'password': os.getenv('WHATSAPP_TARGET_PASSWORD')
-    }
+    'address': os.getenv('WHATSAPP_TARGET_ADDRESS'),
+    'user': os.getenv('WHATSAPP_TARGET_USER'),
+    'password': os.getenv('WHATSAPP_TARGET_PASSWORD')
 })
 
 ##########################################################################################################################
 
-# Set API Port
-avbot.port(os.getenv('WHATSAPP_PORT'))
+# Set Network API
+app = py_misc.API()
 
-# Set Authentication
+# Set Network Endnode
+avbot.network.route(
+    route='whatsapp',
+    app=app
+)
+
+# Set Network API Port
+app.port(
+    int(os.getenv('WHATSAPP_PORT'))
+)
+
+# Set Network Authentication
 for i in range(
     int(os.getenv('WHATSAPP_USERS'))
 ):
-    avbot.user(os.getenv(f'WHATSAPP_USER_${i + 1}'))
-    avbot.password(os.getenv(f'WHATSAPP_PASSWORD_${i + 1}'))
+    avbot.network.adduser(
+        user=os.getenv(f'WHATSAPP_USER_${i + 1}'),
+        password=os.getenv(f'WHATSAPP_PASSWORD_${i + 1}')
+    )
 
 ##########################################################################################################################
 
-# Create Connection
-makesql = (lambda db: py_misc.MySQL(
-    host = 'localhost',
-    port = os.getenv('MYSQL_PORT'),
-    user = os.getenv('MYSQL_USER'),
-    password = os.getenv('MYSQL_PASSWORD'),
-    database = db
-))
+# Create SQL Connection
+def makesql(db: str):
+    return py_misc.MySQL(
+        host = 'localhost',
+        port = os.getenv('MYSQL_PORT'),
+        user = os.getenv('MYSQL_USER'),
+        password = os.getenv('MYSQL_PASSWORD'),
+        database = db
+    )
 
 ##########################################################################################################################
 
@@ -88,8 +100,11 @@ def one_hour_scheudule():
 
 ##########################################################################################################################
 
-# Start Avbot
+# Start Bot
 avbot.start()
+
+# Start Network API
+app.start()
 
 ##########################################################################################################################
 
