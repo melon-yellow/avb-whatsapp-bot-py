@@ -55,10 +55,10 @@ app.port(
 for i in range(
     int(os.getenv('WHATSAPP_USERS'))
 ):
-    avbot.network.adduser(
-        user=os.getenv(f'WHATSAPP_USER_${i + 1}'),
-        password=os.getenv(f'WHATSAPP_PASSWORD_${i + 1}')
-    )
+    avbot.network.users.update({
+        os.getenv(f'WHATSAPP_USER_${i + 1}'):
+        os.getenv(f'WHATSAPP_PASSWORD_${i + 1}')
+    })
 
 ##########################################################################################################################
 
