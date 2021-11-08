@@ -38,7 +38,7 @@ avbot = Bot({
 ##########################################################################################################################
 
 # Set Network API
-app = py_misc.API()
+app = py_misc.API(log=False)
 
 # Set Network Endnode
 avbot.network.route(
