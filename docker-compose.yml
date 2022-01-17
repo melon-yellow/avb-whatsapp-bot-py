@@ -8,8 +8,8 @@ services:
 ##########################################################################################################################
 
   db:
-    image: mysql:8
-    container_name: db-w-61
+    image: melon-yellow/mysql-8-avb-whatsapp-py-db
+    container_name: avb-whatsapp-py-db
     build: ./db
     command: --default-authentication-plugin=mysql_native_password
     env_file: .env
@@ -22,10 +22,13 @@ services:
 ##########################################################################################################################
 
   whatsapp:
-    image: python:3.10
-    container_name: whatsapp-61
+    image: melon-yellow/python-3.10-avb-whatsapp-py
+    container_name: avb-whatsapp-py
     build: ./whatsapp
-    command: bash -c "pip install -r requirements.txt && cd .. && python -m app"
+    command: bash -c "
+      pip install -r requirements.txt &&
+      cd .. &&
+      python -m app"
     env_file: .env
     volumes:
       - ./whatsapp/:/usr/app/
